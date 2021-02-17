@@ -3,28 +3,74 @@ package gol.game;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
 import java.awt.Color;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import gol.display.shapes.FillRect;
 import gol.display.shapes.Shape;
+import gol.display.shapes.Text;
+import gol.game.schematic.Schematic;
 import gol.input.InputDisplay;
 
 public class Board extends InputDisplay {
 
     private Vector2 screenPos;
     private int cellScreenLen;
-
+    private int step;
     private HashSet<Vector2> aliveCells;
 
+    private boolean run;
+    private int stepTime;
+    private boolean stepAuto;
+    private int[] cooldownTimers;
+
+    private final int KEY_COOLDOWN = 2_500_000;
+    private final int KEY_COUNT = 3;
+
     public Board(HashSet<Vector2> aliveCells) { this(aliveCells, new Vector2(-10, -10), 25); }
-    public Board(HashSet<Vector2> aliveCells, Vector2 screenPos, int zoom) {
+    public Board(Schematic schem) { this(schem.getData(), new Vector2(-10, -10), 25); }
+    public Board(HashSet<Vector2> aliveCells, Vector2 screenPos, int cellScreenLen) {
         super(Color.BLACK);
 
         this.aliveCells = aliveCells;
         this.screenPos = screenPos;
-        this.cellScreenLen = zoom;
+        this.cellScreenLen = cellScreenLen;
+
+        step = 0;
+
+        run = true;
+        stepAuto = false;
+        stepTime = 1000;
+        cooldownTimers = new int[KEY_COUNT];
+    }
+
+    public void run() {
+        drawBoard();
+
+        while (run) {
+            for (int i = 0; i < cooldownTimers.length; i++) {
+                if (cooldownTimers[i] > 0)
+                    cooldownTimers[i]--;
+            }
+
+            checkKeys();
+            if (stepAuto) {
+                try {
+                    Thread.sleep(stepTime);
+
+                    for (int i = 0; i < cooldownTimers.length; i++) {
+                        if (cooldownTimers[i] > 0)
+                            cooldownTimers[i]=Math.max(cooldownTimers[i]-stepTime*10, 0);
+                    }
+                } catch (InterruptedException e) {}
+                checkKeys();
+                step();
+            } else
+                checkKeys();
+        }
     }
 
     /* RULES:
@@ -34,7 +80,7 @@ public class Board extends InputDisplay {
     4. Live cell with >4 neighbors dies */
     public void step() {
         HashSet<Vector2> next = (HashSet<Vector2>) aliveCells.clone();
-        HashMap<Vector2, Vector2> commonCells = new HashMap<Vector2, Vector2>();
+        HashSet<Vector2> deadChecked = new HashSet<Vector2>();
 
         Iterator<Vector2> iterator = aliveCells.iterator();
         while (iterator.hasNext()) {
@@ -44,50 +90,29 @@ public class Board extends InputDisplay {
             if (value > 4 || value < 2)
                 next.remove(pos);
             
-            Iterator<Vector2> nestedIterator = aliveCells.iterator();
-            while(nestedIterator.hasNext()) {
-                Vector2 nestedPos = nestedIterator.next();
-                /* IF
-                temp and nestedTemp are within common distance and
-                the mapping doesn't already exist */
-                if (withinCommonDist(pos, nestedPos) && !alreadyExists(commonCells, pos, nestedPos)) {
-                    // so that there's only one value per key
-                    if (commonCells.containsKey(pos))
-                        commonCells.put(nestedPos, pos);
-                    else
-                        commonCells.put(pos, nestedPos);
+            for (int y = pos.y-1; y < pos.y+2; y++) {
+                for (int x = pos.x-1; x < pos.x+2; x++) {
+                    Vector2 temp = new Vector2(x, y);
+                    if (!(x == pos.x && y == pos.y) && !deadChecked.contains(temp) && getNeighbors(temp) == 3) {
+                        next.add(temp);
+                    }
+                    
+                    deadChecked.add(temp);
                 }
             }
         }
 
-        for (HashMap.Entry<Vector2, Vector2> m : commonCells.entrySet()) {
-            // A -> B (m)
-            // B -> C
-
-            /* IF
-            B -> C exists
-            withinCommonDist(A, C)*/
-            if (commonCells.containsKey(m.getValue()) && withinCommonDist(m.getKey(), commonCells.get(m.getValue()))) {
-                List<Vector2> points = getCommonCells(m.getKey(), m.getValue(), commonCells.get(m.getValue()));
-
-                for (Vector2 i : points)
-                    next.add(i);
-            }
-        }
-
-        aliveCells = (HashSet<Vector2>) next.clone();
+        aliveCells = next;
+        step++;
         drawBoard();
     }
 
     public int getNeighbors(Vector2 pos) {
-        if (!aliveCells.contains(pos))
-            return -1;
-
         int output = 0;
 
         for (int y = pos.y-1; y < pos.y+2; y++) {
             for (int x = pos.x-1; x < pos.x+2; x++) {
-                if (!(x == 0 && y == 0) && aliveCells.contains(new Vector2(x, y)))
+                if (!(x == pos.x && y == pos.y) && aliveCells.contains(new Vector2(x, y)))
                     output++;
             }
         }
@@ -95,7 +120,7 @@ public class Board extends InputDisplay {
         return output;
     }
 
-    private static boolean withinCommonDist(Vector2 a, Vector2 b) {
+    /*private static boolean withinCommonDist(Vector2 a, Vector2 b) {
         if (a == b)
             return false;
 
@@ -122,7 +147,7 @@ public class Board extends InputDisplay {
             return true;
         
         return false;
-    }
+    }*/
 
     public void print(Vector2 min, Vector2 max) {
         for (int y = (int) min.y; y < max.y; y++) {
@@ -151,20 +176,38 @@ public class Board extends InputDisplay {
         
             Vector2 drawPos = (point.sub(screenPos)).mul(cellScreenLen);
             
-            shapes.add(new FillRect(
-                drawPos.x,
-                drawPos.y,
-                cellScreenLen,
-                cellScreenLen,
-                0,
-                Color.WHITE
-            ));
+            shapes.add(new FillRect(drawPos.x, drawPos.y, (int) (cellScreenLen*0.95), (int) (cellScreenLen*0.95),
+                0, Color.WHITE));
         }
+
+        shapes.add(new Text("Steps: "+step, 5, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));
 
         Shape[] output = new Shape[shapes.size()];
         for (int i = 0; i < output.length; i++)
             output[i] = shapes.get(i);
 
         draw(output);
+    }
+
+    private void checkKeys() {
+        if (hasKey("Space") && cooldownTimers[0] == 0) {
+            if (stepAuto) {
+                stepAuto = false;
+                cooldownTimers[0] = KEY_COOLDOWN;
+            } else {
+                stepAuto = true;
+                cooldownTimers[0] = KEY_COOLDOWN;
+            }
+        }
+
+        if (hasKey("q") || hasKey("Q") && cooldownTimers[1] == 0) {
+            run = false;
+            cooldownTimers[1] = KEY_COOLDOWN;
+        }
+        
+        if (!stepAuto && (hasKey("e") || hasKey("E")) && cooldownTimers[2] == 0) {
+            step();
+            cooldownTimers[2] = KEY_COOLDOWN;
+        }
     }
 }

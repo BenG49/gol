@@ -1,23 +1,13 @@
 package gol;
 
-import java.util.HashSet;
-
 import gol.game.Board;
-import gol.game.Vector2;
+import gol.game.schematic.Schematic;
+import gol.game.schematic.Schematic.Pattern;
 
 public class Main {
-    public static void main(String[] args) {
-        HashSet<Vector2> in = new HashSet<Vector2>();
-        in.add(new Vector2(0, -1));
-        in.add(new Vector2(0, 0));
-        in.add(new Vector2(0, 1));
-        Board b = new Board(in);
 
-        for (int i = 0; i < 50; i++) {
-            b.step();
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {}
-        }
+    public static void main(String[] args) {
+        Board b = new Board(Schematic.getPattern(Pattern.GLIDER));
+        b.run();
     }
 }

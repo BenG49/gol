@@ -9,7 +9,7 @@ public class Text extends Shape {
     private final Color c;
     private final Font font;
 
-    public Text(String text, int x, int y, Color c,Font font) {
+    public Text(String text, int x, int y, Color c, Font font) {
         this.text = text;
         this.x = x;
         this.y = y;
