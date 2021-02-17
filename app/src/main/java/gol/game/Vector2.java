@@ -18,9 +18,12 @@ public class Vector2 {
         return this.x == temp.x && this.y == temp.y;
     }
 
-    // TODO: make it so each has a unique value
+    // TODO: improve hashing
     public int hashCode() {
-        return (int) Math.pow(x, y);
+        int hash = 23;
+        hash = hash * 31 + x;
+        hash = hash * 31 + y;
+        return hash;
     }
 
     public String toString() {
