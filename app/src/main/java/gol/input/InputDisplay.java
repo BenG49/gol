@@ -1,6 +1,7 @@
 package gol.input;
 
 import gol.display.Display;
+import com.stuypulse.stuylib.util.chart.KeyTracker;
 
 public class InputDisplay extends Display {
     private KeyTracker keyboard;
