@@ -7,7 +7,6 @@ import java.util.List;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import gol.display.shapes.FillRect;
 import gol.display.shapes.Shape;
@@ -63,7 +62,7 @@ public class Board extends InputDisplay {
 
                     for (int i = 0; i < cooldownTimers.length; i++) {
                         if (cooldownTimers[i] > 0)
-                            cooldownTimers[i]=Math.max(cooldownTimers[i]-stepTime*10, 0);
+                            cooldownTimers[i] = 0;
                     }
                 } catch (InterruptedException e) {}
                 checkKeys();
