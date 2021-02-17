@@ -3,15 +3,28 @@ package gol.game;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Board {
+import gol.display.shapes.FillRect;
+import gol.display.shapes.Shape;
+import gol.input.InputDisplay;
+
+public class Board extends InputDisplay {
+
+    private Vector2 screenPos;
+    private int cellScreenLen;
 
     private HashSet<Vector2> aliveCells;
 
-    public Board (HashSet<Vector2> aliveCells) {
+    public Board(HashSet<Vector2> aliveCells) { this(aliveCells, new Vector2(-10, -10), 25); }
+    public Board(HashSet<Vector2> aliveCells, Vector2 screenPos, int zoom) {
+        super(Color.BLACK);
+
         this.aliveCells = aliveCells;
+        this.screenPos = screenPos;
+        this.cellScreenLen = zoom;
     }
 
     /* RULES:
@@ -63,7 +76,7 @@ public class Board {
         }
 
         aliveCells = (HashSet<Vector2>) next.clone();
-        print(new Vector2(-2, -2), new Vector2(2, 2));
+        drawBoard();
     }
 
     public int getNeighbors(Vector2 pos) {
@@ -122,5 +135,36 @@ public class Board {
 
             System.out.println();
         }
+    }
+
+    public void drawBoard() {
+        Vector2 max = screenPos.add(new Vector2(WIDTH*cellScreenLen, HEIGHT*cellScreenLen));
+        List<Shape> shapes = new ArrayList<Shape>();
+
+        Iterator<Vector2> iterator = aliveCells.iterator();
+
+        while (iterator.hasNext()) {
+            Vector2 point = iterator.next();
+
+            if (point.x < screenPos.x || point.x > max.x || point.y < screenPos.y || point.y > max.y)
+                continue;
+        
+            Vector2 drawPos = (point.sub(screenPos)).mul(cellScreenLen);
+            
+            shapes.add(new FillRect(
+                drawPos.x,
+                drawPos.y,
+                cellScreenLen,
+                cellScreenLen,
+                0,
+                Color.WHITE
+            ));
+        }
+
+        Shape[] output = new Shape[shapes.size()];
+        for (int i = 0; i < output.length; i++)
+            output[i] = shapes.get(i);
+
+        draw(output);
     }
 }

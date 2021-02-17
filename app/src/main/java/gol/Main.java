@@ -13,8 +13,11 @@ public class Main {
         in.add(new Vector2(0, 1));
         Board b = new Board(in);
 
-        b.print(new Vector2(-2, -2), new Vector2(2, 2));
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 50; i++) {
             b.step();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {}
+        }
     }
 }
