@@ -17,7 +17,7 @@ import gol.input.KeyBinding;
 
 public class Board extends InputDisplay {
 
-    private HashSet<Vector2> aliveCells;
+    private HashSet<Vector2Int> aliveCells;
     private int stepTimeMillis;
     private int stepCount;
     private boolean betweenSteps;
@@ -32,9 +32,9 @@ public class Board extends InputDisplay {
     public Vector2 screenPos;
     public int cellScreenLen;
 
-    public Board(HashSet<Vector2> aliveCells) { this(aliveCells, new Vector2(-10, -10), 25, new KeyBinding()); }
+    public Board(HashSet<Vector2Int> aliveCells) { this(aliveCells, new Vector2(-10, -10), 25, new KeyBinding()); }
     public Board(Schematic schem) { this(schem.getData(), new Vector2(-10, -10), 25, new KeyBinding()); }
-    public Board(HashSet<Vector2> aliveCells, Vector2 screenPos, int cellScreenLen, KeyBinding binding) {
+    public Board(HashSet<Vector2Int> aliveCells, Vector2 screenPos, int cellScreenLen, KeyBinding binding) {
         super(Color.BLACK);
 
         this.aliveCells = aliveCells;
@@ -83,20 +83,20 @@ public class Board extends InputDisplay {
     3. Dead cell with 3 neighbors is born
     4. Live cell with >3 neighbors dies */
     public void step() {
-        HashSet<Vector2> next = (HashSet<Vector2>) aliveCells.clone();
-        HashSet<Vector2> deadChecked = new HashSet<Vector2>();
+        HashSet<Vector2Int> next = (HashSet<Vector2Int>) aliveCells.clone();
+        HashSet<Vector2Int> deadChecked = new HashSet<Vector2Int>();
 
-        Iterator<Vector2> iterator = aliveCells.iterator();
+        Iterator<Vector2Int> iterator = aliveCells.iterator();
         while (iterator.hasNext()) {
-            Vector2 pos = iterator.next();
+            Vector2Int pos = iterator.next();
             int value = getNeighbors(pos);
 
             if (value > 3 || value < 2)
                 next.remove(pos);
             
-            for (int y = pos.y-1; y < pos.y+2; y++) {
-                for (int x = pos.x-1; x < pos.x+2; x++) {
-                    Vector2 temp = new Vector2(x, y);
+            for (int y = (int)pos.x-1; y < pos.y+2; y++) {
+                for (int x = (int)pos.x-1; x < pos.x+2; x++) {
+                    Vector2Int temp = new Vector2Int(x, y);
                     if (!(x == pos.x && y == pos.y) && !deadChecked.contains(temp) && getNeighbors(temp) == 3) {
                         next.add(temp);
                     }
@@ -110,12 +110,12 @@ public class Board extends InputDisplay {
         stepCount++;
     }
 
-    public int getNeighbors(Vector2 pos) {
+    public int getNeighbors(Vector2Int pos) {
         int output = 0;
 
-        for (int y = pos.y-1; y < pos.y+2; y++) {
-            for (int x = pos.x-1; x < pos.x+2; x++) {
-                if (!(x == pos.x && y == pos.y) && aliveCells.contains(new Vector2(x, y)))
+        for (int y = (int)pos.y-1; y < pos.y+2; y++) {
+            for (int x = (int)pos.x-1; x < pos.x+2; x++) {
+                if (!(x == pos.x && y == pos.y) && aliveCells.contains(new Vector2Int(x, y)))
                     output++;
             }
         }
@@ -126,7 +126,7 @@ public class Board extends InputDisplay {
     public void printTerminal(Vector2 min, Vector2 max) {
         for (int y = (int) min.y; y < max.y; y++) {
             for (int x = (int) min.x; x < max.x; x++) {
-                if (aliveCells.contains(new Vector2(x, y)))
+                if (aliveCells.contains(new Vector2Int(x, y)))
                     System.out.print("O");
                 else
                     System.out.print(" ");
@@ -139,19 +139,20 @@ public class Board extends InputDisplay {
     public void drawBoard() {
         Vector2 max = screenPos.add(new Vector2(WIDTH*cellScreenLen, HEIGHT*cellScreenLen));
         List<Shape> shapes = new ArrayList<Shape>();
+        final int CELL_WIDTH = (int) (cellScreenLen*0.95);
 
-        Iterator<Vector2> iterator = aliveCells.iterator();
+        Iterator<Vector2Int> iterator = aliveCells.iterator();
 
         while (iterator.hasNext()) {
-            Vector2 point = iterator.next();
+            Vector2Int point = iterator.next();
 
-            if (point.x < screenPos.x || point.x > max.x || point.y < screenPos.y || point.y > max.y)
+            if (point.x+CELL_WIDTH < screenPos.x || point.x > max.x || point.y+CELL_WIDTH < screenPos.y || point.y > max.y)
                 continue;
         
             Vector2 drawPos = (point.sub(screenPos)).mul(cellScreenLen);
             
-            shapes.add(new FillRect(drawPos.x, drawPos.y, (int) (cellScreenLen*0.95), (int) (cellScreenLen*0.95),
-                0, Color.WHITE));
+            shapes.add(new FillRect((int)drawPos.round().x, (int)drawPos.round().y,
+                CELL_WIDTH, CELL_WIDTH, 0, Color.WHITE));
         }
 
         shapes.add(new Text("Steps: "+stepCount, 5, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));

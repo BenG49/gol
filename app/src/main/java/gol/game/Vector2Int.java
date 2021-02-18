@@ -2,12 +2,20 @@ package gol.game;
 
 import com.stuypulse.stuylib.math.Angle;
 
-public class Vector2 {
-    public final double x, y;
+public class Vector2Int {
+    public final int x, y;
 
-    public Vector2(double x, double y) {
+    public Vector2Int(int x, int y) {
         this.x = x;
         this.y = y;
+    }
+
+    public Vector2Int add(Vector2Int a) {
+        return new Vector2Int(this.x+a.x, this.y+a.y);
+    }
+
+    public Vector2Int sub(Vector2Int a) {
+        return new Vector2Int(this.x-a.x, this.y-a.y);
     }
 
     public Vector2 add(Vector2 a) {
@@ -27,43 +35,31 @@ public class Vector2 {
     }
 
     public boolean equals(Object a) {
-        if (!(a instanceof Vector2))
+        if (!(a instanceof Vector2Int))
             return false;
         if (a == this)
             return true;
 
-        Vector2 temp = (Vector2) a;
+        Vector2Int temp = (Vector2Int) a;
         return this.x == temp.x && this.y == temp.y;
     }
 
     // thanks to Sam B from StuyLib for this method
-    public Vector2 rotate(Angle angle, Vector2 origin) {
-        Vector2 point = this.sub(origin);
-        Vector2 out = new Vector2(
-            point.x * angle.cos() - point.y * angle.sin(),
-            point.y * angle.cos() + point.x * angle.sin()
+    public Vector2Int rotate(Angle angle, Vector2Int origin) {
+        Vector2Int point = this.sub(origin);
+        Vector2Int out = new Vector2Int(
+            (int)(point.x * angle.cos()) - (int)(point.y * angle.sin()),
+            (int)(point.y * angle.cos()) + (int)(point.x * angle.sin())
         );
 
         return origin.add(out);
     }
 
-    public Vector2 round() {
-        return new Vector2(Math.round(x), Math.round(y));
-    }
-
-    public Vector2 ceil() {
-        return new Vector2(Math.ceil(x), Math.ceil(y));
-    }
-
-    public Vector2 floor() {
-        return new Vector2(Math.floor(x), Math.floor(y));
-    }
-
     // TODO: improve hashing
     public int hashCode() {
         int hash = 23;
-        hash = (int)(hash * 31 + x);
-        hash = (int)(hash * 31 + y);
+        hash = hash * 31 + x;
+        hash = hash * 31 + y;
         return hash;
     }
 
@@ -71,3 +67,4 @@ public class Vector2 {
         return "("+x+","+y+")";
     }
 }
+

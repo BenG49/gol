@@ -7,7 +7,7 @@ import gol.game.schematic.Schematic.Pattern;
 public class Main {
 
     public static void main(String[] args) {
-        Board b = new Board(Schematic.getPattern(Pattern.GLIDER, 1));
+        Board b = new Board(Schematic.getPattern(Pattern.GLIDER, 3));
         b.run();
     }
 }

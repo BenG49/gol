@@ -6,19 +6,19 @@ import gol.game.Board;
 import gol.game.Vector2;
 
 public class BoardInput {
-    private Board board;
+    private Board b;
     private KeyBinding keyBind;
     private HashMap<String, Integer> keyCooldownTimer;
 
     // apparently this code runs 6x per millisecond on my laptop
     private final int KEY_COOLDOWN = 450*6;
-    private final float ZOOM_MULT = 1.5f;
-    private final float MOVEMENT_MULT = 0.01f;
+    private final double ZOOM_MULT = 1.5;
+    private final double MOVEMENT_MULT = 0.1;
 
-    private int movementSpeed = 50;
+    private double movementSpeed = 50;
 
     public BoardInput(Board board, KeyBinding binding) {
-        this.board = board;
+        this.b = board;
         keyBind = binding;
         
         keyCooldownTimer = new HashMap<String, Integer>();
@@ -35,7 +35,7 @@ public class BoardInput {
     }
 
     public void checkKeys() {
-        movementSpeed = (int)((board.WIDTH-board.cellScreenLen)*MOVEMENT_MULT);
+        movementSpeed = (b.WIDTH/b.cellScreenLen)*MOVEMENT_MULT;
 
         for (HashMap.Entry<String, Integer> mapElement : keyCooldownTimer.entrySet()) {
             if (mapElement.getValue() > 0)
@@ -43,54 +43,53 @@ public class BoardInput {
         }
 
         if (keyCanBePressed(keyBind.toggleAutoKey())) {
-            board.stepAuto = !board.stepAuto;
+            b.stepAuto = !b.stepAuto;
             startTimer(keyBind.toggleAutoKey());
         }
         
-        if (!board.stepAuto && keyCanBePressed(keyBind.singleStepKey())) {
-            board.step();
+        if (!b.stepAuto && keyCanBePressed(keyBind.singleStepKey())) {
+            b.step();
             startTimer(keyBind.singleStepKey());
         }
 
         if (keyCanBePressed(keyBind.quitKey())) {
-            board.run = false;
+            b.run = false;
             startTimer(keyBind.quitKey());
         }
 
-        // TODO: move screenPos so that zoom is centered on screen
         if (keyCanBePressed(keyBind.zoomOut())) {
-            board.cellScreenLen /= ZOOM_MULT;
+            zoom(false);
             startTimer(keyBind.zoomOut());
         }
 
         if (keyCanBePressed(keyBind.zoomIn())) {
-            board.cellScreenLen *= ZOOM_MULT;
+            zoom(true);
             startTimer(keyBind.zoomIn());
         }
 
         if (keyCanBePressed(keyBind.up())) {
-            board.screenPos = board.screenPos.add(new Vector2(0, -movementSpeed));
+            b.screenPos = b.screenPos.add(new Vector2(0, -movementSpeed));
             startTimer(keyBind.up());
         }
 
         if (keyCanBePressed(keyBind.down())) {
-            board.screenPos = board.screenPos.add(new Vector2(0, movementSpeed));
+            b.screenPos = b.screenPos.add(new Vector2(0, movementSpeed));
             startTimer(keyBind.down());
         }
 
         if (keyCanBePressed(keyBind.left())) {
-            board.screenPos = board.screenPos.add(new Vector2(-movementSpeed, 0));
+            b.screenPos = b.screenPos.add(new Vector2(-movementSpeed, 0));
             startTimer(keyBind.left());
         }
 
         if (keyCanBePressed(keyBind.right())) {
-            board.screenPos = board.screenPos.add(new Vector2(movementSpeed, 0));
+            b.screenPos = b.screenPos.add(new Vector2(movementSpeed, 0));
             startTimer(keyBind.right());
         }
     }
 
     private boolean keyCanBePressed(String key) {
-        return keyCooldownTimer.get(key) == 0 && board.hasKey(key);
+        return keyCooldownTimer.get(key) == 0 && b.hasKey(key);
     }
 
     private void hashPutInit(String key) {
@@ -99,5 +98,19 @@ public class BoardInput {
 
     private void startTimer(String key) {
         keyCooldownTimer.replace(key, KEY_COOLDOWN);
+    }
+
+    private void zoom(boolean zoomIn) {
+        // TODO: fix zoom not working at 0,0
+        if (zoomIn) {
+            b.cellScreenLen *= ZOOM_MULT;
+            b.screenPos = b.screenPos.div(ZOOM_MULT);
+        } else {
+            b.cellScreenLen /= ZOOM_MULT;
+            b.screenPos = b.screenPos.mul(ZOOM_MULT);
+        }
+
+        if (b.cellScreenLen == 0)
+            b.cellScreenLen = 1;
     }
 }
