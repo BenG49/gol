@@ -4,64 +4,60 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.awt.Color;
 import java.awt.Font;
 
 import gol.display.shapes.*;
 import gol.game.schematic.Schematic;
 import gol.input.InputDisplay;
+import gol.input.KeyBinding;
 
 public class Board extends InputDisplay {
-
     private Vector2 screenPos;
     private int cellScreenLen;
-    private int step;
-    private HashSet<Vector2> aliveCells;
 
+    private HashSet<Vector2> aliveCells;
+    private int step;
     private boolean run;
     private int stepTime;
     private boolean stepAuto;
-    // TODO: change to java time instead of de incrementing
-    private int[] cooldownTimers;
 
-    private final int KEY_COOLDOWN = 2_500_000;
-    private final int KEY_COUNT = 3;
+    private TimerTask task;
+    private HashMap<String, Boolean> keysActive;
+    private HashMap<String, Timer> cooldownTimers;
 
-    public Board(HashSet<Vector2> aliveCells) { this(aliveCells, new Vector2(-10, -10), 25); }
-    public Board(Schematic schem) { this(schem.getData(), new Vector2(-10, -10), 25); }
-    public Board(HashSet<Vector2> aliveCells, Vector2 screenPos, int cellScreenLen) {
+    private final KeyBinding binding;
+    private final long KEY_COOLDOWN_MILLIS = 100L;
+
+    public Board(HashSet<Vector2> aliveCells) { this(aliveCells, new Vector2(-10, -10), 25, new KeyBinding()); }
+    public Board(Schematic schem) { this(schem.getData(), new Vector2(-10, -10), 25, new KeyBinding()); }
+    public Board(HashSet<Vector2> aliveCells, Vector2 screenPos, int cellScreenLen, KeyBinding binding) {
         super(Color.BLACK);
 
         this.aliveCells = aliveCells;
         this.screenPos = screenPos;
         this.cellScreenLen = cellScreenLen;
+        this.binding = binding;
 
         step = 0;
-
         run = true;
         stepAuto = false;
         stepTime = 1000;
-        cooldownTimers = new int[KEY_COUNT];
+
+        initKeyHashes();
     }
 
     public void run() {
         drawBoard();
 
         while (run) {
-            for (int i = 0; i < cooldownTimers.length; i++) {
-                if (cooldownTimers[i] > 0)
-                    cooldownTimers[i]--;
-            }
-
             checkKeys();
             if (stepAuto) {
                 try {
                     Thread.sleep(stepTime);
-
-                    for (int i = 0; i < cooldownTimers.length; i++) {
-                        if (cooldownTimers[i] > 0)
-                            cooldownTimers[i] = 0;
-                    }
                 } catch (InterruptedException e) {}
                 checkKeys();
                 step();
@@ -158,24 +154,47 @@ public class Board extends InputDisplay {
     }
 
     private void checkKeys() {
-        if (hasKey("Space") && cooldownTimers[0] == 0) {
-            if (stepAuto) {
-                stepAuto = false;
-                cooldownTimers[0] = KEY_COOLDOWN;
-            } else {
-                stepAuto = true;
-                cooldownTimers[0] = KEY_COOLDOWN;
-            }
+        if (hasKey(binding.toggleAutoKey()) && keysActive.get(binding.toggleAutoKey())) {
+            stepAuto = !stepAuto;
+            startTimer(binding.toggleAutoKey());
         }
 
-        if (hasKey("q") || hasKey("Q") && cooldownTimers[1] == 0) {
+        if (hasKey(binding.quitKey()) && keysActive.get(binding.quitKey())) {
             run = false;
-            cooldownTimers[1] = KEY_COOLDOWN;
+            startTimer(binding.quitKey());
         }
         
-        if (!stepAuto && hasKey("Enter") && cooldownTimers[2] == 0) {
+        if (!stepAuto && hasKey(binding.singleStepKey()) && keysActive.get(binding.singleStepKey())) {
             step();
-            cooldownTimers[2] = KEY_COOLDOWN;
+            startTimer(binding.singleStepKey());
+        }
+    }
+
+    private void initKeyHashes() {
+        keysActive = new HashMap<String, Boolean>();
+        cooldownTimers = new HashMap<String, Timer>();
+
+        hashPutInit(binding.toggleAutoKey());
+        hashPutInit(binding.singleStepKey());
+        hashPutInit(binding.quitKey());
+    }
+
+    private void hashPutInit(String key) {
+        keysActive.put(key, true);
+        cooldownTimers.put(key, new Timer(key));
+    }
+
+    private void startTimer(String key) {
+        if (cooldownTimers.containsKey(key)) {
+            keysActive.replace(key, false);
+
+            task = new TimerTask() {
+                public void run() {
+                    keysActive.replace(Thread.currentThread().getName(), true);
+                }
+            };
+
+            cooldownTimers.get(key).schedule(task, KEY_COOLDOWN_MILLIS);
         }
     }
 }
