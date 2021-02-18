@@ -68,17 +68,28 @@ public class Schematic {
     }
 
     public HashSet<Vector2Int> getData() {
-        HashSet<Vector2Int> output = cells;
+        HashSet<Vector2Int> output = new HashSet<Vector2Int>();
 
-        for (Schematic i : schematics) {
-            HashSet<Vector2Int> temp = i.getData();
-            Vector2Int schemOrigin = i.getOrigin();
+        try {
+            if (!origin.equals(new Vector2Int(0, 0))) {
+                Iterator<Vector2Int> iterator = cells.iterator();
+                while (iterator.hasNext())
+                    output.add(iterator.next().add(origin));
+            } else
+                output = cells;
+        } catch (NullPointerException e) {}
 
-            Iterator<Vector2Int> iterator = temp.iterator();
+        try {
+            for (Schematic i : schematics) {
+                HashSet<Vector2Int> temp = i.getData();
+                Vector2Int schemOrigin = i.getOrigin();
 
-            while (iterator.hasNext())
-                output.add(iterator.next().add(schemOrigin));
-        }
+                Iterator<Vector2Int> iterator = temp.iterator();
+
+                while (iterator.hasNext())
+                    output.add(iterator.next().add(schemOrigin));
+            }
+        } catch (NullPointerException e) {}
 
         return output;
     }

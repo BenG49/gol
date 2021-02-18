@@ -10,6 +10,11 @@ public class Vector2 {
         this.y = y;
     }
 
+    public Vector2(double xy) {
+        x = xy;
+        y = xy;
+    }
+
     public Vector2 add(Vector2 a) {
         return new Vector2(this.x+a.x, this.y+a.y);
     }

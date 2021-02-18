@@ -9,7 +9,9 @@ public class KeyBinding {
             "Enter",
             "q",
             "e", "r",
-            "w", "a", "s", "d"
+            "w", "a", "s", "d",
+            "Up", "Down",
+            "f"
         });
 
         String[] array;
@@ -63,5 +65,17 @@ public class KeyBinding {
 
     public String right() {
         return binding[8];
+    }
+
+    public String speedUp() {
+        return binding[9];
+    }
+
+    public String speedDown() {
+        return binding[10];
+    }
+
+    public String toOrigin() {
+        return binding[11];
     }
 }

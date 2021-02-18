@@ -18,7 +18,6 @@ import gol.input.KeyBinding;
 public class Board extends InputDisplay {
 
     private HashSet<Vector2Int> aliveCells;
-    private int stepTimeMillis;
     private int stepCount;
     private boolean betweenSteps;
     private Timer stepTimer;
@@ -26,49 +25,38 @@ public class Board extends InputDisplay {
 
     private BoardInput input;
 
-    // variables for BoardInput
-    public boolean stepAuto;
-    public boolean run;
-    public Vector2 screenPos;
-    public int cellScreenLen;
+    private static final int DEFAULT_WIDTH = 700;
 
-    public Board(HashSet<Vector2Int> aliveCells) { this(aliveCells, new Vector2(-10, -10), 25, new KeyBinding()); }
-    public Board(Schematic schem) { this(schem.getData(), new Vector2(-10, -10), 25, new KeyBinding()); }
-    public Board(HashSet<Vector2Int> aliveCells, Vector2 screenPos, int cellScreenLen, KeyBinding binding) {
-        super(Color.BLACK);
+    public Board(HashSet<Vector2Int> aliveCells) { this(aliveCells, 25, new KeyBinding()); }
+    public Board(Schematic schem) { this(schem.getData(), 25, new KeyBinding()); }
+    public Board(HashSet<Vector2Int> aliveCells, int cellScreenLen, KeyBinding binding) {
+        super(DEFAULT_WIDTH, DEFAULT_WIDTH, Color.BLACK);
 
         this.aliveCells = aliveCells;
-        this.screenPos = screenPos;
-        this.cellScreenLen = cellScreenLen;
 
-        input = new BoardInput(this, binding);
+        input = new BoardInput(this, binding, cellScreenLen);
         stepTimer = new Timer();
 
         stepCount = 0;
-        run = true;
-        stepAuto = false;
-        stepTimeMillis = 450;
         betweenSteps = false;
     }
 
     public void run() {
-        drawBoard();
-
-        while (run) {
+        while (input.getRun()) {
             input.checkKeys();
-            if (stepAuto) {
+            if (input.getStepAuto()) {
                 if (!betweenSteps) {
                     step();
-                    betweenSteps = true;
 
-                    if (stepTimeMillis > 1) {
+                    if (input.getStepTimeMillis() > 1) {
+                        betweenSteps = true;
                         stepTimerTask = new TimerTask() {
                             public void run() {
                                 betweenSteps = false;
                             }
                         };
 
-                        stepTimer.schedule(stepTimerTask, stepTimeMillis);
+                        stepTimer.schedule(stepTimerTask, input.getStepTimeMillis());
                     }
                 }
             }
@@ -94,14 +82,16 @@ public class Board extends InputDisplay {
             if (value > 3 || value < 2)
                 next.remove(pos);
             
-            for (int y = (int)pos.x-1; y < pos.y+2; y++) {
-                for (int x = (int)pos.x-1; x < pos.x+2; x++) {
+            for (int y = pos.y-1; y < pos.y+2; y++) {
+                for (int x = pos.x-1; x < pos.x+2; x++) {
                     Vector2Int temp = new Vector2Int(x, y);
-                    if (!(x == pos.x && y == pos.y) && !deadChecked.contains(temp) && getNeighbors(temp) == 3) {
-                        next.add(temp);
-                    }
-                    
+                    if (deadChecked.contains(temp) || (x == pos.x && y == pos.y))
+                        continue;
+
                     deadChecked.add(temp);
+
+                    if (getNeighbors(temp) == 3)
+                        next.add(temp);
                 }
             }
         }
@@ -113,48 +103,49 @@ public class Board extends InputDisplay {
     public int getNeighbors(Vector2Int pos) {
         int output = 0;
 
-        for (int y = (int)pos.y-1; y < pos.y+2; y++) {
-            for (int x = (int)pos.x-1; x < pos.x+2; x++) {
+        for (int y = pos.y-1; y < pos.y+2; y++) {
+            for (int x = pos.x-1; x < pos.x+2; x++) {
                 if (!(x == pos.x && y == pos.y) && aliveCells.contains(new Vector2Int(x, y)))
                     output++;
             }
         }
 
         return output;
-    }
-
-    public void printTerminal(Vector2 min, Vector2 max) {
-        for (int y = (int) min.y; y < max.y; y++) {
-            for (int x = (int) min.x; x < max.x; x++) {
-                if (aliveCells.contains(new Vector2Int(x, y)))
-                    System.out.print("O");
-                else
-                    System.out.print(" ");
-            }
-
-            System.out.println();
-        }
-    }
+   }
 
     public void drawBoard() {
-        Vector2 max = screenPos.add(new Vector2(WIDTH*cellScreenLen, HEIGHT*cellScreenLen));
-        List<Shape> shapes = new ArrayList<Shape>();
-        final int CELL_WIDTH = (int) (cellScreenLen*0.95);
+        final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);
 
+        Vector2 max = input.getScreenPos().add(new Vector2(
+            WIDTH*input.getCellScreenLen(),
+            HEIGHT*input.getCellScreenLen()
+        ));
+        List<Shape> shapes = new ArrayList<Shape>();
         Iterator<Vector2Int> iterator = aliveCells.iterator();
 
         while (iterator.hasNext()) {
-            Vector2Int point = iterator.next();
+            Vector2Int pos = iterator.next();
 
-            if (point.x+CELL_WIDTH < screenPos.x || point.x > max.x || point.y+CELL_WIDTH < screenPos.y || point.y > max.y)
+            if (pos.x+CELL_WIDTH < input.getScreenPos().x || pos.x > max.x || pos.y+CELL_WIDTH < input.getScreenPos().y || pos.y > max.y)
                 continue;
         
-            Vector2 drawPos = (point.sub(screenPos)).mul(cellScreenLen);
-            
-            shapes.add(new FillRect((int)drawPos.round().x, (int)drawPos.round().y,
-                CELL_WIDTH, CELL_WIDTH, 0, Color.WHITE));
+            projectToScreen(pos, shapes, false);
         }
 
+        // cross around 0,0
+        projectToScreen(new Vector2Int(1, 0), shapes, true);
+        projectToScreen(new Vector2Int(0, 1), shapes, true);
+        projectToScreen(new Vector2Int(-1, 0), shapes, true);
+        projectToScreen(new Vector2Int(0, -1), shapes, true);
+        projectToScreen(new Vector2Int(2, 0), shapes, true);
+        projectToScreen(new Vector2Int(0, 2), shapes, true);
+        projectToScreen(new Vector2Int(-2, 0), shapes, true);
+        projectToScreen(new Vector2Int(0, -2), shapes, true);
+
+        // mouse highlight
+        if (getMouse().x > 0 && getMouse().x < 1 && getMouse().y > 0 && getMouse().y < 1)
+            projectToScreen(getMouseGamePos(), shapes, true);
+        
         shapes.add(new Text("Steps: "+stepCount, 5, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));
 
         Shape[] output = new Shape[shapes.size()];
@@ -162,5 +153,26 @@ public class Board extends InputDisplay {
             output[i] = shapes.get(i);
 
         draw(output);
+    }
+
+    private void projectToScreen(Vector2Int pos, List<Shape> shapes, boolean highlight) {
+        final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);
+
+        Vector2 drawPos =  pos.sub(input.getScreenPos()).mul(input.getCellScreenLen());
+        Color color;
+
+        if (highlight)
+            color = new Color(1f, 1f, 1f, 0.25f);
+        else
+            color = Color.WHITE;
+
+        shapes.add(new FillRect((int)drawPos.round().x, (int)drawPos.round().y,
+            CELL_WIDTH, CELL_WIDTH, 0, color));
+    }
+
+    // TODO: optimize by having either cache or checking if mouse has moved
+    public Vector2Int getMouseGamePos() {
+        Vector2 mousePos = new Vector2(getMouse().x, 1-getMouse().y).mul(HEIGHT).div(input.getCellScreenLen()).add(input.getScreenPos()).floor();
+        return new Vector2Int((int)mousePos.x, (int)mousePos.y);
     }
 }

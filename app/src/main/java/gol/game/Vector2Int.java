@@ -10,6 +10,11 @@ public class Vector2Int {
         this.y = y;
     }
 
+    public Vector2Int(int xy) {
+        x = xy;
+        y = xy;
+    }
+
     public Vector2Int add(Vector2Int a) {
         return new Vector2Int(this.x+a.x, this.y+a.y);
     }

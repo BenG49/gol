@@ -10,16 +10,31 @@ public class BoardInput {
     private KeyBinding keyBind;
     private HashMap<String, Integer> keyCooldownTimer;
 
-    // apparently this code runs 6x per millisecond on my laptop
-    private final int KEY_COOLDOWN = 450*6;
+    private final int KEY_COOLDOWN = 250;
     private final double ZOOM_MULT = 1.5;
     private final double MOVEMENT_MULT = 0.1;
+    private final int STEP_TIME_INTERVAL = 25;
+
+    private int stepTimeMillis;
+    private boolean stepAuto;
+    private boolean run;
+    private Vector2 screenPos;
+    private int cellScreenLen;
 
     private double movementSpeed = 50;
 
-    public BoardInput(Board board, KeyBinding binding) {
-        this.b = board;
+    public BoardInput(Board b, KeyBinding binding, int cellScreenLen) {
+        this(b, binding, new Vector2(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2), cellScreenLen);
+    }
+    public BoardInput(Board b, KeyBinding binding, Vector2 screenPos, int cellScreenLen) {
+        this.b = b;
+        this.screenPos = screenPos;
+        this.cellScreenLen = cellScreenLen;
         keyBind = binding;
+
+        run = true;
+        stepAuto = false;
+        stepTimeMillis = 400;
         
         keyCooldownTimer = new HashMap<String, Integer>();
 
@@ -32,10 +47,15 @@ public class BoardInput {
         hashPutInit(keyBind.down());
         hashPutInit(keyBind.left());
         hashPutInit(keyBind.right());
+        hashPutInit(keyBind.speedUp());
+        hashPutInit(keyBind.speedDown());
+        hashPutInit(keyBind.toOrigin());
     }
 
     public void checkKeys() {
-        movementSpeed = (b.WIDTH/b.cellScreenLen)*MOVEMENT_MULT;
+        movementSpeed = (b.WIDTH/cellScreenLen)*MOVEMENT_MULT;
+
+        System.out.println(cellScreenLen+", "+b.WIDTH/cellScreenLen);
 
         for (HashMap.Entry<String, Integer> mapElement : keyCooldownTimer.entrySet()) {
             if (mapElement.getValue() > 0)
@@ -43,17 +63,17 @@ public class BoardInput {
         }
 
         if (keyCanBePressed(keyBind.toggleAutoKey())) {
-            b.stepAuto = !b.stepAuto;
+            stepAuto = !stepAuto;
             startTimer(keyBind.toggleAutoKey());
         }
         
-        if (!b.stepAuto && keyCanBePressed(keyBind.singleStepKey())) {
+        if (!stepAuto && keyCanBePressed(keyBind.singleStepKey())) {
             b.step();
             startTimer(keyBind.singleStepKey());
         }
 
         if (keyCanBePressed(keyBind.quitKey())) {
-            b.run = false;
+            // run = false;
             startTimer(keyBind.quitKey());
         }
 
@@ -68,23 +88,39 @@ public class BoardInput {
         }
 
         if (keyCanBePressed(keyBind.up())) {
-            b.screenPos = b.screenPos.add(new Vector2(0, -movementSpeed));
+            screenPos = screenPos.add(new Vector2(0, -movementSpeed));
             startTimer(keyBind.up());
         }
 
         if (keyCanBePressed(keyBind.down())) {
-            b.screenPos = b.screenPos.add(new Vector2(0, movementSpeed));
+            screenPos = screenPos.add(new Vector2(0, movementSpeed));
             startTimer(keyBind.down());
         }
 
         if (keyCanBePressed(keyBind.left())) {
-            b.screenPos = b.screenPos.add(new Vector2(-movementSpeed, 0));
+            screenPos = screenPos.add(new Vector2(-movementSpeed, 0));
             startTimer(keyBind.left());
         }
 
         if (keyCanBePressed(keyBind.right())) {
-            b.screenPos = b.screenPos.add(new Vector2(movementSpeed, 0));
+            screenPos = screenPos.add(new Vector2(movementSpeed, 0));
             startTimer(keyBind.right());
+        }
+
+        if (keyCanBePressed(keyBind.speedUp())) {
+            if (stepTimeMillis > 1)
+                stepTimeMillis = Math.max(stepTimeMillis - STEP_TIME_INTERVAL, 1);
+            startTimer(keyBind.speedUp());
+        }
+
+        if (keyCanBePressed(keyBind.speedDown())) {
+            stepTimeMillis += STEP_TIME_INTERVAL;
+            startTimer(keyBind.speedDown());
+        }
+
+        if (keyCanBePressed(keyBind.toOrigin())) {
+            screenPos = new Vector2(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2);
+            startTimer(keyBind.toOrigin());
         }
     }
 
@@ -101,16 +137,38 @@ public class BoardInput {
     }
 
     private void zoom(boolean zoomIn) {
-        // TODO: fix zoom not working at 0,0
+        final double squareCount = b.WIDTH/cellScreenLen;
+
         if (zoomIn) {
-            b.cellScreenLen *= ZOOM_MULT;
-            b.screenPos = b.screenPos.div(ZOOM_MULT);
+            cellScreenLen *= ZOOM_MULT;
+            screenPos = screenPos.add(new Vector2((squareCount-squareCount/1.5)/2));
         } else {
-            b.cellScreenLen /= ZOOM_MULT;
-            b.screenPos = b.screenPos.mul(ZOOM_MULT);
+            cellScreenLen /= ZOOM_MULT;
+            screenPos = screenPos.sub(new Vector2((squareCount*1.5-squareCount)/2));
         }
 
-        if (b.cellScreenLen == 0)
-            b.cellScreenLen = 1;
+        if (cellScreenLen == 0)
+            cellScreenLen = 1;
+    }
+
+    // get methods
+    public boolean getStepAuto() {
+        return stepAuto;
+    }
+
+    public boolean getRun() {
+        return run;
+    }
+
+    public Vector2 getScreenPos() {
+        return screenPos;
+    }
+
+    public int getCellScreenLen() {
+        return cellScreenLen;
+    }
+    
+    public int getStepTimeMillis() {
+        return stepTimeMillis;
     }
 }

@@ -34,7 +34,8 @@ public class Display extends JFrame {
     public void draw(Shape[] shapes) {
         try {
             remove(currentDraw);
-        } catch(NullPointerException e) {}
+        // using general exception to catch NullPointer and "AWT-EventQueue-0" errors
+        } catch(Exception e) {}
 
         Draw d = new Draw(shapes, background);
         currentDraw = d;
