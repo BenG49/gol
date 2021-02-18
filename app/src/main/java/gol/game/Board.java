@@ -3,34 +3,34 @@ package gol.game;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.ArrayList;
 import java.awt.Color;
 import java.awt.Font;
 
 import gol.display.shapes.*;
 import gol.game.schematic.Schematic;
+import gol.input.BoardInput;
 import gol.input.InputDisplay;
 import gol.input.KeyBinding;
 
 public class Board extends InputDisplay {
-    private Vector2 screenPos;
-    private int cellScreenLen;
 
     private HashSet<Vector2> aliveCells;
-    private int step;
-    private boolean run;
-    private int stepTime;
-    private boolean stepAuto;
+    private int stepTimeMillis;
+    private int stepCount;
+    private boolean betweenSteps;
+    private Timer stepTimer;
+    private TimerTask stepTimerTask;
 
-    private TimerTask task;
-    private HashMap<String, Boolean> keysActive;
-    private HashMap<String, Timer> cooldownTimers;
+    private BoardInput input;
 
-    private final KeyBinding binding;
-    private final long KEY_COOLDOWN_MILLIS = 100L;
+    // variables for BoardInput
+    public boolean stepAuto;
+    public boolean run;
+    public Vector2 screenPos;
+    public int cellScreenLen;
 
     public Board(HashSet<Vector2> aliveCells) { this(aliveCells, new Vector2(-10, -10), 25, new KeyBinding()); }
     public Board(Schematic schem) { this(schem.getData(), new Vector2(-10, -10), 25, new KeyBinding()); }
@@ -40,29 +40,40 @@ public class Board extends InputDisplay {
         this.aliveCells = aliveCells;
         this.screenPos = screenPos;
         this.cellScreenLen = cellScreenLen;
-        this.binding = binding;
 
-        step = 0;
+        input = new BoardInput(this, binding);
+        stepTimer = new Timer();
+
+        stepCount = 0;
         run = true;
         stepAuto = false;
-        stepTime = 1000;
-
-        initKeyHashes();
+        stepTimeMillis = 500;
+        betweenSteps = false;
     }
 
     public void run() {
         drawBoard();
 
         while (run) {
-            checkKeys();
+            input.checkKeys();
             if (stepAuto) {
-                try {
-                    Thread.sleep(stepTime);
-                } catch (InterruptedException e) {}
-                checkKeys();
-                step();
-            } else
-                checkKeys();
+                if (!betweenSteps) {
+                    step();
+                    betweenSteps = true;
+
+                    if (stepTimeMillis > 1) {
+                        stepTimerTask = new TimerTask() {
+                            public void run() {
+                                betweenSteps = false;
+                            }
+                        };
+
+                        stepTimer.schedule(stepTimerTask, stepTimeMillis);
+                    }
+                }
+            }
+            drawBoard();
+            input.checkKeys();
         }
     }
 
@@ -96,8 +107,7 @@ public class Board extends InputDisplay {
         }
 
         aliveCells = next;
-        step++;
-        drawBoard();
+        stepCount++;
     }
 
     public int getNeighbors(Vector2 pos) {
@@ -113,7 +123,7 @@ public class Board extends InputDisplay {
         return output;
     }
 
-    public void print(Vector2 min, Vector2 max) {
+    public void printTerminal(Vector2 min, Vector2 max) {
         for (int y = (int) min.y; y < max.y; y++) {
             for (int x = (int) min.x; x < max.x; x++) {
                 if (aliveCells.contains(new Vector2(x, y)))
@@ -144,57 +154,12 @@ public class Board extends InputDisplay {
                 0, Color.WHITE));
         }
 
-        shapes.add(new Text("Steps: "+step, 5, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));
+        shapes.add(new Text("Steps: "+stepCount, 5, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));
 
         Shape[] output = new Shape[shapes.size()];
         for (int i = 0; i < output.length; i++)
             output[i] = shapes.get(i);
 
         draw(output);
-    }
-
-    private void checkKeys() {
-        if (hasKey(binding.toggleAutoKey()) && keysActive.get(binding.toggleAutoKey())) {
-            stepAuto = !stepAuto;
-            startTimer(binding.toggleAutoKey());
-        }
-
-        if (hasKey(binding.quitKey()) && keysActive.get(binding.quitKey())) {
-            run = false;
-            startTimer(binding.quitKey());
-        }
-        
-        if (!stepAuto && hasKey(binding.singleStepKey()) && keysActive.get(binding.singleStepKey())) {
-            step();
-            startTimer(binding.singleStepKey());
-        }
-    }
-
-    private void initKeyHashes() {
-        keysActive = new HashMap<String, Boolean>();
-        cooldownTimers = new HashMap<String, Timer>();
-
-        hashPutInit(binding.toggleAutoKey());
-        hashPutInit(binding.singleStepKey());
-        hashPutInit(binding.quitKey());
-    }
-
-    private void hashPutInit(String key) {
-        keysActive.put(key, true);
-        cooldownTimers.put(key, new Timer(key));
-    }
-
-    private void startTimer(String key) {
-        if (cooldownTimers.containsKey(key)) {
-            keysActive.replace(key, false);
-
-            task = new TimerTask() {
-                public void run() {
-                    keysActive.replace(Thread.currentThread().getName(), true);
-                }
-            };
-
-            cooldownTimers.get(key).schedule(task, KEY_COOLDOWN_MILLIS);
-        }
     }
 }

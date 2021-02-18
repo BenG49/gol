@@ -7,7 +7,9 @@ public class KeyBinding {
         MAIN(new String[] {
             "Space",
             "Enter",
-            "q"
+            "q",
+            "e", "r",
+            "w", "a", "s", "d"
         });
 
         String[] array;
@@ -37,5 +39,29 @@ public class KeyBinding {
 
     public String quitKey() {
         return binding[2];
+    }
+
+    public String zoomOut() {
+        return binding[3];
+    }
+
+    public String zoomIn() {
+        return binding[4];
+    }
+
+    public String up() {
+        return binding[5];
+    }
+
+    public String left() {
+        return binding[6];
+    }
+
+    public String down() {
+        return binding[7];
+    }
+
+    public String right() {
+        return binding[8];
     }
 }
