@@ -47,7 +47,7 @@ public class Board extends InputDisplay {
         stepCount = 0;
         run = true;
         stepAuto = false;
-        stepTimeMillis = 500;
+        stepTimeMillis = 450;
         betweenSteps = false;
     }
 

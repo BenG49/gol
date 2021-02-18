@@ -1,8 +1,6 @@
 package gol.input;
 
 import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import gol.game.Board;
 import gol.game.Vector2;
@@ -10,21 +8,20 @@ import gol.game.Vector2;
 public class BoardInput {
     private Board board;
     private KeyBinding keyBind;
+    private HashMap<String, Integer> keyCooldownTimer;
 
-    private TimerTask task;
-    private HashMap<String, Boolean> keysActive;
-    private HashMap<String, Timer> cooldownTimers;
-
-    private final long KEY_COOLDOWN_MILLIS = 100L;
+    // apparently this code runs 6x per millisecond on my laptop
+    private final int KEY_COOLDOWN = 450*6;
     private final float ZOOM_MULT = 1.5f;
-    private final int MOVEMENT_SPEED = 50;
+    private final float MOVEMENT_MULT = 0.01f;
+
+    private int movementSpeed = 50;
 
     public BoardInput(Board board, KeyBinding binding) {
         this.board = board;
         keyBind = binding;
         
-        keysActive = new HashMap<String, Boolean>();
-        cooldownTimers = new HashMap<String, Timer>();
+        keyCooldownTimer = new HashMap<String, Integer>();
 
         hashPutInit(keyBind.toggleAutoKey());
         hashPutInit(keyBind.singleStepKey());
@@ -38,6 +35,13 @@ public class BoardInput {
     }
 
     public void checkKeys() {
+        movementSpeed = (int)((board.WIDTH-board.cellScreenLen)*MOVEMENT_MULT);
+
+        for (HashMap.Entry<String, Integer> mapElement : keyCooldownTimer.entrySet()) {
+            if (mapElement.getValue() > 0)
+                keyCooldownTimer.replace(mapElement.getKey(), mapElement.getValue()-1);
+        }
+
         if (keyCanBePressed(keyBind.toggleAutoKey())) {
             board.stepAuto = !board.stepAuto;
             startTimer(keyBind.toggleAutoKey());
@@ -53,51 +57,47 @@ public class BoardInput {
             startTimer(keyBind.quitKey());
         }
 
+        // TODO: move screenPos so that zoom is centered on screen
         if (keyCanBePressed(keyBind.zoomOut())) {
             board.cellScreenLen /= ZOOM_MULT;
+            startTimer(keyBind.zoomOut());
         }
 
         if (keyCanBePressed(keyBind.zoomIn())) {
             board.cellScreenLen *= ZOOM_MULT;
+            startTimer(keyBind.zoomIn());
         }
 
         if (keyCanBePressed(keyBind.up())) {
-            board.screenPos = board.screenPos.add(new Vector2(0, MOVEMENT_SPEED));
+            board.screenPos = board.screenPos.add(new Vector2(0, -movementSpeed));
+            startTimer(keyBind.up());
         }
 
         if (keyCanBePressed(keyBind.down())) {
-            board.screenPos = board.screenPos.add(new Vector2(0, -MOVEMENT_SPEED));
+            board.screenPos = board.screenPos.add(new Vector2(0, movementSpeed));
+            startTimer(keyBind.down());
         }
 
         if (keyCanBePressed(keyBind.left())) {
-            board.screenPos = board.screenPos.add(new Vector2(MOVEMENT_SPEED, 0));
+            board.screenPos = board.screenPos.add(new Vector2(-movementSpeed, 0));
+            startTimer(keyBind.left());
         }
 
         if (keyCanBePressed(keyBind.right())) {
-            board.screenPos = board.screenPos.add(new Vector2(-MOVEMENT_SPEED, 0));
+            board.screenPos = board.screenPos.add(new Vector2(movementSpeed, 0));
+            startTimer(keyBind.right());
         }
     }
 
     private boolean keyCanBePressed(String key) {
-        return keysActive.get(key) && board.hasKey(key);
+        return keyCooldownTimer.get(key) == 0 && board.hasKey(key);
     }
 
     private void hashPutInit(String key) {
-        keysActive.put(key, true);
-        cooldownTimers.put(key, new Timer(key));
+        keyCooldownTimer.put(key, 0);
     }
 
     private void startTimer(String key) {
-        if (cooldownTimers.containsKey(key)) {
-            keysActive.replace(key, false);
-
-            task = new TimerTask() {
-                public void run() {
-                    keysActive.replace(Thread.currentThread().getName(), true);
-                }
-            };
-
-            cooldownTimers.get(key).schedule(task, KEY_COOLDOWN_MILLIS);
-        }
+        keyCooldownTimer.replace(key, KEY_COOLDOWN);
     }
 }
