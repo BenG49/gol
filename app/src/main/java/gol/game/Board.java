@@ -3,14 +3,11 @@ package gol.game;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
+import java.util.ArrayList;
 import java.awt.Color;
 import java.awt.Font;
-import java.util.ArrayList;
 
-import gol.display.shapes.FillRect;
-import gol.display.shapes.Shape;
-import gol.display.shapes.Text;
+import gol.display.shapes.*;
 import gol.game.schematic.Schematic;
 import gol.input.InputDisplay;
 
@@ -24,6 +21,7 @@ public class Board extends InputDisplay {
     private boolean run;
     private int stepTime;
     private boolean stepAuto;
+    // TODO: change to java time instead of de incrementing
     private int[] cooldownTimers;
 
     private final int KEY_COOLDOWN = 2_500_000;
@@ -76,7 +74,7 @@ public class Board extends InputDisplay {
     1. Live cell with <2 neighbors dies
     2. Live cell with 2-3 neighbors lives
     3. Dead cell with 3 neighbors is born
-    4. Live cell with >4 neighbors dies */
+    4. Live cell with >3 neighbors dies */
     public void step() {
         HashSet<Vector2> next = (HashSet<Vector2>) aliveCells.clone();
         HashSet<Vector2> deadChecked = new HashSet<Vector2>();
@@ -86,7 +84,7 @@ public class Board extends InputDisplay {
             Vector2 pos = iterator.next();
             int value = getNeighbors(pos);
 
-            if (value > 4 || value < 2)
+            if (value > 3 || value < 2)
                 next.remove(pos);
             
             for (int y = pos.y-1; y < pos.y+2; y++) {
@@ -118,35 +116,6 @@ public class Board extends InputDisplay {
 
         return output;
     }
-
-    /*private static boolean withinCommonDist(Vector2 a, Vector2 b) {
-        if (a == b)
-            return false;
-
-        return Math.abs(a.x-b.x) < 3 && Math.abs(a.y-b.y) < 3;
-    }
-
-    private static List<Vector2> getCommonCells(Vector2 a, Vector2 b, Vector2 c) {
-        List<Vector2> output = new ArrayList<Vector2>();
-
-        for (int y = a.y-1; y < a.y+2; y++) {
-            for (int x = a.x-1; x < a.x+2; x++) {
-                if (!(x == 0 && y == 0) && Math.abs(x-b.x) < 2 && Math.abs(y-b.y) < 2 && Math.abs(x-c.x) < 2 && Math.abs(y-c.y) < 2)
-                    output.add(new Vector2(x, y));
-            }
-        }
-
-        return output;
-    }
-
-    private static boolean alreadyExists(HashMap<Vector2, Vector2> map, Vector2 a, Vector2 b) {
-        if (map.containsKey(a) && map.get(a) == b)
-            return true;
-        if (map.containsKey(b) && map.get(b) == a)
-            return true;
-        
-        return false;
-    }*/
 
     public void print(Vector2 min, Vector2 max) {
         for (int y = (int) min.y; y < max.y; y++) {
@@ -204,7 +173,7 @@ public class Board extends InputDisplay {
             cooldownTimers[1] = KEY_COOLDOWN;
         }
         
-        if (!stepAuto && (hasKey("e") || hasKey("E")) && cooldownTimers[2] == 0) {
+        if (!stepAuto && hasKey("Enter") && cooldownTimers[2] == 0) {
             step();
             cooldownTimers[2] = KEY_COOLDOWN;
         }

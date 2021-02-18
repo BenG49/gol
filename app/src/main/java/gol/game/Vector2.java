@@ -1,5 +1,7 @@
 package gol.game;
 
+import com.stuypulse.stuylib.math.Angle;
+
 public class Vector2 {
     public int x, y;
 
@@ -32,6 +34,17 @@ public class Vector2 {
 
         Vector2 temp = (Vector2) a;
         return this.x == temp.x && this.y == temp.y;
+    }
+
+    // thanks to Sam B from StuyLib for this method
+    public Vector2 rotate(Angle angle, Vector2 origin) {
+        Vector2 point = this.sub(origin);
+        Vector2 out = new Vector2(
+            (int) (point.x * angle.cos()) - (int)(point.y * angle.sin()),
+            (int) (point.y * angle.cos()) + (int)(point.x * angle.sin())
+        );
+
+        return origin.add(out);
     }
 
     // TODO: improve hashing

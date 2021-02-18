@@ -3,6 +3,10 @@ package gol.game.schematic;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
+import com.stuypulse.stuylib.math.Angle;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import gol.game.Vector2;
@@ -79,7 +83,20 @@ public class Schematic {
         return output;
     }
 
-    public static HashSet<Vector2> getPattern(Pattern pattern) {
-        return new HashSet<Vector2>(pattern.getArray());
+    public static List<Vector2> rotate90(List<Vector2> in) {
+        List<Vector2> out = new ArrayList<Vector2>();
+
+        for (Vector2 i : in)
+            out.add(i.rotate(Angle.k90deg, new Vector2(0, 0)));
+
+        return out;
+    }
+
+    public static HashSet<Vector2> getPattern(Pattern pattern, int rotation) {
+        List<Vector2> temp = pattern.getArray();
+        for (int i = 0; i < rotation; i++)
+            temp = rotate90(temp);
+
+        return new HashSet<Vector2>(temp);
     }
 }
