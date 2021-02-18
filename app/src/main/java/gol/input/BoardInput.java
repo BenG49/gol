@@ -10,7 +10,7 @@ public class BoardInput {
     private KeyBinding keyBind;
     private HashMap<String, Integer> keyCooldownTimer;
 
-    private final int KEY_COOLDOWN = 250;
+    private final int KEY_COOLDOWN = 200;
     private final double ZOOM_MULT = 1.5;
     private final double MOVEMENT_MULT = 0.1;
     private final int STEP_TIME_INTERVAL = 25;
@@ -54,8 +54,6 @@ public class BoardInput {
 
     public void checkKeys() {
         movementSpeed = (b.WIDTH/cellScreenLen)*MOVEMENT_MULT;
-
-        System.out.println(cellScreenLen+", "+b.WIDTH/cellScreenLen);
 
         for (HashMap.Entry<String, Integer> mapElement : keyCooldownTimer.entrySet()) {
             if (mapElement.getValue() > 0)
@@ -140,14 +138,16 @@ public class BoardInput {
         final double squareCount = b.WIDTH/cellScreenLen;
 
         if (zoomIn) {
-            cellScreenLen *= ZOOM_MULT;
             screenPos = screenPos.add(new Vector2((squareCount-squareCount/1.5)/2));
+            cellScreenLen = (int)Math.round(cellScreenLen*ZOOM_MULT);
         } else {
-            cellScreenLen /= ZOOM_MULT;
             screenPos = screenPos.sub(new Vector2((squareCount*1.5-squareCount)/2));
+            cellScreenLen = (int)Math.round(cellScreenLen/ZOOM_MULT);
         }
 
-        if (cellScreenLen == 0)
+        System.out.println(cellScreenLen);
+
+        if (cellScreenLen < 1)
             cellScreenLen = 1;
     }
 
