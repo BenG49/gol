@@ -62,6 +62,7 @@ public class Board extends InputDisplay {
             }
             drawBoard();
             input.checkKeys();
+            checkMouseClicks();
         }
     }
 
@@ -111,7 +112,25 @@ public class Board extends InputDisplay {
         }
 
         return output;
-   }
+    }
+
+    private void checkMouseClicks() {
+        // LEFT CLICK -> ADD CELL
+        if (getButtonPressed(1)) {
+            Vector2Int mousePos = getMouseGamePos();
+
+            if (!aliveCells.contains(mousePos))
+                aliveCells.add(mousePos);
+        }
+
+        // RIGHT CLICK -> REMOVE CELL
+        if (getButtonPressed(3)) {
+            Vector2Int mousePos = getMouseGamePos();
+
+            if (aliveCells.contains(mousePos))
+                aliveCells.remove(mousePos);
+        }
+    }
 
     public void drawBoard() {
         final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);

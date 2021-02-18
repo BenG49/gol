@@ -11,6 +11,7 @@ import com.stuypulse.stuylib.util.chart.MouseTracker;
 public class InputDisplay extends Display {
     private KeyTracker keyboard;
     private MouseTracker mouse;
+    private MouseClicks mouseClicks;
 
     public InputDisplay() { this(500, 500, Color.WHITE); }
     public InputDisplay(Color background) { this(500, 500, background); }
@@ -19,6 +20,9 @@ public class InputDisplay extends Display {
 
         keyboard = new KeyTracker();
         mouse = new MouseTracker(this);
+        mouseClicks = new MouseClicks();
+
+        addMouseListener(mouseClicks);
         addKeyListener(keyboard);
     }
 
@@ -28,5 +32,13 @@ public class InputDisplay extends Display {
     
     public Vector2 getMouse() {
         return new Vector2(mouse.getMouseX(), mouse.getMouseY());
+    }
+
+    public boolean getButtonPressed(int button) {
+        return mouseClicks.getButtonPressed(button);
+    }
+
+    public boolean anyButtonsPressed() {
+        return mouseClicks.anyButtonsPressed();
     }
 }

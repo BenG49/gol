@@ -60,6 +60,8 @@ public class BoardInput {
                 keyCooldownTimer.replace(mapElement.getKey(), mapElement.getValue()-1);
         }
 
+
+        // KEYS
         if (keyCanBePressed(keyBind.toggleAutoKey())) {
             stepAuto = !stepAuto;
             startTimer(keyBind.toggleAutoKey());
