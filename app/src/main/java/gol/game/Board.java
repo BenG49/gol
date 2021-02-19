@@ -25,7 +25,7 @@ public class Board extends InputDisplay {
 
     private BoardInput input;
 
-    private static final int DEFAULT_WIDTH = 700;
+    private static final int DEFAULT_WIDTH = 1000;
 
     public Board(HashSet<Vector2Int> aliveCells) { this(aliveCells, 25, new KeyBinding()); }
     public Board(Schematic schem) { this(schem.getData(), 25, new KeyBinding()); }
