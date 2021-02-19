@@ -17,13 +17,15 @@ import gol.input.KeyBinding;
 
 public class Board extends InputDisplay {
 
-    private HashSet<Vector2Int> aliveCells;
-    private int stepCount;
     private boolean betweenSteps;
     private Timer stepTimer;
     private TimerTask stepTimerTask;
 
+    private boolean lastLeftMouse;
+    private boolean lastRightMouse;
+
     private BoardInput input;
+    public GameAlg game;
 
     private static final int DEFAULT_WIDTH = 1000;
 
@@ -32,13 +34,13 @@ public class Board extends InputDisplay {
     public Board(HashSet<Vector2Int> aliveCells, int cellScreenLen, KeyBinding binding) {
         super(DEFAULT_WIDTH, DEFAULT_WIDTH, Color.BLACK);
 
-        this.aliveCells = aliveCells;
-
+        game = new GameAlg(aliveCells);
         input = new BoardInput(this, binding, cellScreenLen);
         stepTimer = new Timer();
 
-        stepCount = 0;
         betweenSteps = false;
+        lastLeftMouse = false;
+        lastRightMouse = false;
     }
 
     public void run() {
@@ -46,7 +48,7 @@ public class Board extends InputDisplay {
             input.checkKeys();
             if (input.getStepAuto()) {
                 if (!betweenSteps) {
-                    step();
+                    game.step();
 
                     if (input.getStepTimeMillis() > 1) {
                         betweenSteps = true;
@@ -66,70 +68,30 @@ public class Board extends InputDisplay {
         }
     }
 
-    /* RULES:
-    1. Live cell with <2 neighbors dies
-    2. Live cell with 2-3 neighbors lives
-    3. Dead cell with 3 neighbors is born
-    4. Live cell with >3 neighbors dies */
-    public void step() {
-        HashSet<Vector2Int> next = (HashSet<Vector2Int>) aliveCells.clone();
-        HashSet<Vector2Int> deadChecked = new HashSet<Vector2Int>();
-
-        Iterator<Vector2Int> iterator = aliveCells.iterator();
-        while (iterator.hasNext()) {
-            Vector2Int pos = iterator.next();
-            int value = getNeighbors(pos);
-
-            if (value > 3 || value < 2)
-                next.remove(pos);
-            
-            for (int y = pos.y-1; y < pos.y+2; y++) {
-                for (int x = pos.x-1; x < pos.x+2; x++) {
-                    Vector2Int temp = new Vector2Int(x, y);
-                    if (deadChecked.contains(temp) || (x == pos.x && y == pos.y))
-                        continue;
-
-                    deadChecked.add(temp);
-
-                    if (getNeighbors(temp) == 3)
-                        next.add(temp);
-                }
-            }
-        }
-
-        aliveCells = next;
-        stepCount++;
-    }
-
-    public int getNeighbors(Vector2Int pos) {
-        int output = 0;
-
-        for (int y = pos.y-1; y < pos.y+2; y++) {
-            for (int x = pos.x-1; x < pos.x+2; x++) {
-                if (!(x == pos.x && y == pos.y) && aliveCells.contains(new Vector2Int(x, y)))
-                    output++;
-            }
-        }
-
-        return output;
-    }
-
     private void checkMouseClicks() {
-        // LEFT CLICK -> ADD CELL
+        // LEFT CLICK
         if (getButtonPressed(1)) {
+            lastLeftMouse = true;
+
             Vector2Int mousePos = getMouseGamePos();
 
-            if (!aliveCells.contains(mousePos))
-                aliveCells.add(mousePos);
-        }
+            // ADD CELL
+            if (!game.hasCell(mousePos))
+                game.addCell(mousePos);
+        } else if (lastLeftMouse)
+            lastLeftMouse = false;
 
-        // RIGHT CLICK -> REMOVE CELL
+        // RIGHT CLICK
         if (getButtonPressed(3)) {
+            lastRightMouse = true;
+
             Vector2Int mousePos = getMouseGamePos();
 
-            if (aliveCells.contains(mousePos))
-                aliveCells.remove(mousePos);
-        }
+            // REMOVE CELL
+            if (game.hasCell(mousePos))
+                game.removeCell(mousePos);
+        } else if (lastRightMouse)
+            lastRightMouse = false;
     }
 
     public void drawBoard() {
@@ -140,7 +102,7 @@ public class Board extends InputDisplay {
             input.getScreenPos().y+HEIGHT*input.getCellScreenLen()
         ));
         List<Shape> shapes = new ArrayList<Shape>();
-        Iterator<Vector2Int> iterator = aliveCells.iterator();
+        Iterator<Vector2Int> iterator = game.getIterator();
 
         while (iterator.hasNext()) {
             Vector2Int pos = iterator.next();
@@ -165,7 +127,7 @@ public class Board extends InputDisplay {
         if (getMouse().x > 0 && getMouse().x < 1 && getMouse().y > 0 && getMouse().y < 1)
             projectToScreen(getMouseGamePos(), shapes, true);
         
-        shapes.add(new Text("Steps: "+stepCount,             5, HEIGHT-10,        Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+        shapes.add(new Text("Steps: "+game.getStepCount(),   5, HEIGHT-10,         Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
         shapes.add(new Text("Speed: "+input.getSpeed0to10(), WIDTH-115, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
         shapes.add(new Text(new Vector2Int(
             WIDTH/input.getCellScreenLen()/2,
@@ -198,9 +160,5 @@ public class Board extends InputDisplay {
     public Vector2Int getMouseGamePos() {
         Vector2 mousePos = new Vector2(getMouse().x, 1-getMouse().y).mul(HEIGHT).div(input.getCellScreenLen()).add(input.getScreenPos()).floor();
         return new Vector2Int((int)mousePos.x, (int)mousePos.y);
-    }
-
-    public void clearCells() {
-        aliveCells = new HashSet<Vector2Int>();
     }
 }

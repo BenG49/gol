@@ -61,7 +61,7 @@ public class BoardInput {
             stepAuto = !stepAuto;
         
         if (!stepAuto && keyCanBePressed(keyBind.singleStepKey()))
-            b.step();
+            b.game.step();
 
         if (keyCanBePressed(keyBind.quitKey()))
             ;// run = false; // COMMENTED FOR NOW BECAUSE IT'S ANNOYING
@@ -94,7 +94,7 @@ public class BoardInput {
             screenPos = new Vector2(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2);
 
         if (keyCanBePressed(keyBind.clear()))
-            b.clearCells();
+            b.game.clearCells();
     }
 
     private boolean keyCanBePressed(String key) {
