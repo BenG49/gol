@@ -126,15 +126,14 @@ public class BoardInput {
     }
 
     private void zoom(boolean zoomIn) {
-        final double squareCount = b.WIDTH/cellScreenLen;
+        final Vector2 screenCenter = screenPos.add(new Vector2(b.WIDTH/2/cellScreenLen, b.HEIGHT/2/cellScreenLen));
 
-        if (zoomIn) {
-            screenPos = screenPos.add(new Vector2((squareCount-squareCount/1.5)/2));
+        if (zoomIn)
             cellScreenLen = (int)Math.round(cellScreenLen*ZOOM_MULT);
-        } else {
-            screenPos = screenPos.sub(new Vector2((squareCount*1.5-squareCount)/2));
+        else
             cellScreenLen = (int)Math.round(cellScreenLen/ZOOM_MULT);
-        }
+
+        screenPos = screenCenter.sub(new Vector2(b.WIDTH/cellScreenLen/2, b.HEIGHT/cellScreenLen/2));
 
         if (cellScreenLen < 2)
             cellScreenLen = 2;
