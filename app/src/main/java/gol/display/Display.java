@@ -2,6 +2,8 @@ package gol.display;
 
 import javax.swing.JFrame;
 import java.awt.Color;
+import java.util.Arrays;
+import java.util.List;
 
 import gol.display.shapes.Shape;
 
@@ -32,6 +34,10 @@ public class Display extends JFrame {
     }
 
     public void draw(Shape[] shapes) {
+        draw(Arrays.asList(shapes));
+    }
+
+    public void draw(List<Shape> shapes) {
         try {
             remove(currentDraw);
         // using general exception to catch NullPointer and "AWT-EventQueue-0" errors

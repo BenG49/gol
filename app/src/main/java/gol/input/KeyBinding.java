@@ -7,12 +7,13 @@ public class KeyBinding {
         MAIN(new String[] {
             "Space",
             "Enter",
-            "q",
             "e", "r",
             "w", "a", "s", "d",
             "Up", "Down",
             "f",
-            "c"
+            "c",
+            "F1",
+            "1", "2"
         });
 
         String[] array;
@@ -40,47 +41,55 @@ public class KeyBinding {
         return binding[1];
     }
 
-    public String quitKey() {
+    public String zoomOut() {
         return binding[2];
     }
 
-    public String zoomOut() {
+    public String zoomIn() {
         return binding[3];
     }
 
-    public String zoomIn() {
+    public String up() {
         return binding[4];
     }
 
-    public String up() {
+    public String left() {
         return binding[5];
     }
 
-    public String left() {
+    public String down() {
         return binding[6];
     }
 
-    public String down() {
+    public String right() {
         return binding[7];
     }
 
-    public String right() {
+    public String speedUp() {
         return binding[8];
     }
 
-    public String speedUp() {
+    public String speedDown() {
         return binding[9];
     }
 
-    public String speedDown() {
+    public String toOrigin() {
         return binding[10];
     }
 
-    public String toOrigin() {
+    public String clear() {
         return binding[11];
     }
 
-    public String clear() {
+    public String toggleOptimized() {
         return binding[12];
+    }
+
+    public String mode1() {
+        return binding[13];
+    }
+
+    public String mode2() {
+        return binding[14];
     }
 }

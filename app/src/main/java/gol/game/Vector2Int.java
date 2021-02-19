@@ -60,7 +60,6 @@ public class Vector2Int {
         return origin.add(out);
     }
 
-    // TODO: improve hashing
     public int hashCode() {
         int hash = 23;
         hash = hash * 31 + x;

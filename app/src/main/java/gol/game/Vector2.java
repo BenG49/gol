@@ -64,7 +64,6 @@ public class Vector2 {
         return new Vector2(Math.floor(x), Math.floor(y));
     }
 
-    // TODO: improve hashing
     public int hashCode() {
         int hash = 23;
         hash = (int)(hash * 31 + x);

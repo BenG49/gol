@@ -1,5 +1,6 @@
 package gol.input;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -20,18 +21,24 @@ public class BoardInput {
     private final int MAX_STEP_TIME = 750;
     // interval to increase stepTime by
     private final int STEP_TIME_INTERVAL = (int)(MAX_STEP_TIME/10);
+    // LUT for if key can be repeated
+    private final HashSet<String> KEYS_DONT_REPEAT;
+    // LUT for if key always repeats
+    private final HashSet<String> KEYS_ALWAYS_REPEAT;
     
     // <--THESE VALUES ARE COMPLETELY DEPENDENT ON PROGRAM SPEED-->
     // amount of time to wait until spamming
-    private final int KEY_REPEAT_CUTOFF = 500;
+    private final int KEY_REPEAT_CUTOFF = 250;
     // interval to wait between keys to activate when spamming
-    private final int KEY_REPEAT_MODULO = 40;
+    private final int KEY_REPEAT_MODULO = 30;
 
     private int stepTimeMillis;
     private boolean stepAuto;
     private boolean run;
     private Vector2 screenPos;
     private int cellScreenLen;
+    private int selectMode;
+    private boolean runOptimized;
 
     private double movementSpeed = 50;
 
@@ -47,14 +54,26 @@ public class BoardInput {
         run = true;
         stepAuto = false;
         stepTimeMillis = STEP_TIME_INTERVAL*5;
+        selectMode = 0;
+        runOptimized = false;
 
         lastKeyPressed = new HashSet<String>();
         keyRepeat = new HashMap<String, Integer>();
+        KEYS_DONT_REPEAT = new HashSet<String>(Arrays.asList(new String[] {
+            keyBind.toggleAutoKey(),
+            keyBind.mode1(),
+            keyBind.mode2(),
+            keyBind.toggleOptimized()
+        }));
+        KEYS_ALWAYS_REPEAT = new HashSet<String>(Arrays.asList(new String[] {
+            keyBind.up(),
+            keyBind.down(),
+            keyBind.left(),
+            keyBind.right()
+        }));
     }
 
-    public void checkKeys() {
-
-        movementSpeed = (b.WIDTH/cellScreenLen)*MOVEMENT_MULT;
+    public void checkKeysOptimized() {
 
         // KEYS
         if (keyCanBePressed(keyBind.toggleAutoKey()))
@@ -62,9 +81,6 @@ public class BoardInput {
         
         if (!stepAuto && keyCanBePressed(keyBind.singleStepKey()))
             b.game.step();
-
-        if (keyCanBePressed(keyBind.quitKey()))
-            ;// run = false; // COMMENTED FOR NOW BECAUSE IT'S ANNOYING
 
         if (keyCanBePressed(keyBind.zoomOut()))
             zoom(false);
@@ -84,29 +100,48 @@ public class BoardInput {
         if (keyCanBePressed(keyBind.right()))
             screenPos = screenPos.add(new Vector2(movementSpeed, 0));
 
+        if (keyCanBePressed(keyBind.toOrigin()))
+            screenPos = new Vector2(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2);
+
+        if (keyCanBePressed(keyBind.toggleOptimized()))
+            runOptimized = !runOptimized;
+
+    }
+
+    public void checkKeys() {
+
+        movementSpeed = (b.WIDTH/cellScreenLen)*MOVEMENT_MULT;
+
+        // KEYS
+        checkKeysOptimized();
+
         if (keyCanBePressed(keyBind.speedUp()) && stepTimeMillis > 2)
             stepTimeMillis = Math.max(stepTimeMillis - STEP_TIME_INTERVAL, 2);
 
         if (keyCanBePressed(keyBind.speedDown()) && stepTimeMillis < MAX_STEP_TIME)
             stepTimeMillis += STEP_TIME_INTERVAL;
 
-        if (keyCanBePressed(keyBind.toOrigin()))
-            screenPos = new Vector2(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2);
-
         if (keyCanBePressed(keyBind.clear()))
             b.game.clearCells();
+
+        if (keyCanBePressed(keyBind.mode1()))
+            selectMode = 0;
+
+        if (keyCanBePressed(keyBind.mode2()))
+            selectMode = 1;
     }
 
+    // TODO: add optimized version
     private boolean keyCanBePressed(String key) {
         // key held down
-        if (b.hasKey(key)) {
+        if (b.hasKey(key) && !KEYS_DONT_REPEAT.contains(key)) {
             if (!keyRepeat.containsKey(key))
                 keyRepeat.put(key, 0);
             
             Integer temp = keyRepeat.get(key);
             keyRepeat.replace(key, ++temp);
             
-            if (temp >= KEY_REPEAT_CUTOFF && temp % KEY_REPEAT_MODULO == 0)
+            if ((KEYS_ALWAYS_REPEAT.contains(key) || temp >= KEY_REPEAT_CUTOFF) && temp % KEY_REPEAT_MODULO == 0)
                 return true;
         }
 
@@ -160,8 +195,15 @@ public class BoardInput {
         return stepTimeMillis;
     }
 
+    public int getSelectMode() {
+        return selectMode;
+    }
+
+    public boolean getRunOptimized() {
+        return runOptimized;
+    }
+
     public int getSpeed0to10() {
-        int value = (int)Math.ceil(10*(MAX_STEP_TIME-stepTimeMillis)/(float)MAX_STEP_TIME);
-        return value;
+        return (int)Math.ceil(10*(MAX_STEP_TIME-stepTimeMillis)/(float)MAX_STEP_TIME);
     }
 }

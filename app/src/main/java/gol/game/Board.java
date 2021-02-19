@@ -23,6 +23,8 @@ public class Board extends InputDisplay {
 
     private boolean lastLeftMouse;
     private boolean lastRightMouse;
+    private Vector2Int selectA;
+    private Vector2Int selectB;
 
     private BoardInput input;
     public GameAlg game;
@@ -45,7 +47,15 @@ public class Board extends InputDisplay {
 
     public void run() {
         while (input.getRun()) {
-            input.checkKeys();
+            List<Shape> outputShapes = new ArrayList<Shape>();
+
+            if (input.getRunOptimized()) {
+                input.checkKeysOptimized();
+                if (input.getStepAuto())
+                    game.step();
+
+                drawBoardOptimized(outputShapes);
+            } else {
             if (input.getStepAuto()) {
                 if (!betweenSteps) {
                     game.step();
@@ -62,46 +72,58 @@ public class Board extends InputDisplay {
                     }
                 }
             }
-            drawBoard();
+            drawBoard(outputShapes);
             input.checkKeys();
             checkMouseClicks();
+            }
+
+            draw(outputShapes);
         }
     }
 
     private void checkMouseClicks() {
         // LEFT CLICK
         if (getButtonPressed(1)) {
-            lastLeftMouse = true;
+            // just clicked
+            if (!lastLeftMouse)
+                selectA = getMouseGamePos();
 
             Vector2Int mousePos = getMouseGamePos();
 
             // ADD CELL
             if (!game.hasCell(mousePos))
                 game.addCell(mousePos);
-        } else if (lastLeftMouse)
-            lastLeftMouse = false;
+
+            lastLeftMouse = true;
+        } else {
+            // just released
+            if (lastLeftMouse) {
+                selectB = getMouseGamePos();
+
+                lastLeftMouse = false;
+            }
+        }
 
         // RIGHT CLICK
         if (getButtonPressed(3)) {
-            lastRightMouse = true;
-
             Vector2Int mousePos = getMouseGamePos();
 
             // REMOVE CELL
             if (game.hasCell(mousePos))
                 game.removeCell(mousePos);
+
+            lastRightMouse = true;
         } else if (lastRightMouse)
             lastRightMouse = false;
     }
 
-    public void drawBoard() {
+    public void drawBoardOptimized(List<Shape> shapes) {
         final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);
 
         Vector2 max = input.getScreenPos().add(new Vector2(
             input.getScreenPos().x+WIDTH*input.getCellScreenLen(),
             input.getScreenPos().y+HEIGHT*input.getCellScreenLen()
         ));
-        List<Shape> shapes = new ArrayList<Shape>();
         Iterator<Vector2Int> iterator = game.getIterator();
 
         while (iterator.hasNext()) {
@@ -112,6 +134,10 @@ public class Board extends InputDisplay {
         
             projectToScreen(pos, shapes, false);
         }
+    }
+
+    public void drawBoard(List<Shape> shapes) {
+        drawBoardOptimized(shapes);
 
         // cross around 0,0
         projectToScreen(new Vector2Int(1, 0), shapes, true);
@@ -133,12 +159,6 @@ public class Board extends InputDisplay {
             WIDTH/input.getCellScreenLen()/2,
             HEIGHT/input.getCellScreenLen()/2).add(input.getScreenPos().floor()).toString(),
             5, HEIGHT-35, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
-
-        Shape[] output = new Shape[shapes.size()];
-        for (int i = 0; i < output.length; i++)
-            output[i] = shapes.get(i);
-
-        draw(output);
     }
 
     private void projectToScreen(Vector2Int pos, List<Shape> shapes, boolean highlight) {
@@ -158,7 +178,7 @@ public class Board extends InputDisplay {
 
     // TODO: optimize by having either cache or checking if mouse has moved
     public Vector2Int getMouseGamePos() {
-        Vector2 mousePos = new Vector2(getMouse().x, 1-getMouse().y).mul(HEIGHT).div(input.getCellScreenLen()).add(input.getScreenPos()).floor();
+        Vector2 mousePos = new Vector2(getMouse().x, 1-getMouse().y).mul(HEIGHT/input.getCellScreenLen()).add(input.getScreenPos()).floor();
         return new Vector2Int((int)mousePos.x, (int)mousePos.y);
     }
 }
