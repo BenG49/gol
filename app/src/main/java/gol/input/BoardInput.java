@@ -133,10 +133,10 @@ public class BoardInput {
         else
             cellScreenLen = (int)Math.round(cellScreenLen/ZOOM_MULT);
 
-        screenPos = screenCenter.sub(new Vector2(b.WIDTH/cellScreenLen/2, b.HEIGHT/cellScreenLen/2));
-
         if (cellScreenLen < 2)
             cellScreenLen = 2;
+        else
+            screenPos = screenCenter.sub(new Vector2(b.WIDTH/cellScreenLen/2, b.HEIGHT/cellScreenLen/2));
     }
 
     // get methods
