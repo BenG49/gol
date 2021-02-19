@@ -11,7 +11,8 @@ public class KeyBinding {
             "e", "r",
             "w", "a", "s", "d",
             "Up", "Down",
-            "f"
+            "f",
+            "c"
         });
 
         String[] array;
@@ -77,5 +78,9 @@ public class KeyBinding {
 
     public String toOrigin() {
         return binding[11];
+    }
+
+    public String clear() {
+        return binding[12];
     }
 }

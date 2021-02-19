@@ -136,8 +136,8 @@ public class Board extends InputDisplay {
         final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);
 
         Vector2 max = input.getScreenPos().add(new Vector2(
-            WIDTH*input.getCellScreenLen(),
-            HEIGHT*input.getCellScreenLen()
+            input.getScreenPos().x+WIDTH*input.getCellScreenLen(),
+            input.getScreenPos().y+HEIGHT*input.getCellScreenLen()
         ));
         List<Shape> shapes = new ArrayList<Shape>();
         Iterator<Vector2Int> iterator = aliveCells.iterator();
@@ -165,7 +165,12 @@ public class Board extends InputDisplay {
         if (getMouse().x > 0 && getMouse().x < 1 && getMouse().y > 0 && getMouse().y < 1)
             projectToScreen(getMouseGamePos(), shapes, true);
         
-        shapes.add(new Text("Steps: "+stepCount, 5, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));
+        shapes.add(new Text("Steps: "+stepCount,             5, HEIGHT-10,        Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+        shapes.add(new Text("Speed: "+input.getSpeed0to10(), WIDTH-115, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+        shapes.add(new Text(new Vector2Int(
+            WIDTH/input.getCellScreenLen()/2,
+            HEIGHT/input.getCellScreenLen()/2).add(input.getScreenPos().floor()).toString(),
+            5, HEIGHT-35, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
 
         Shape[] output = new Shape[shapes.size()];
         for (int i = 0; i < output.length; i++)
@@ -193,5 +198,9 @@ public class Board extends InputDisplay {
     public Vector2Int getMouseGamePos() {
         Vector2 mousePos = new Vector2(getMouse().x, 1-getMouse().y).mul(HEIGHT).div(input.getCellScreenLen()).add(input.getScreenPos()).floor();
         return new Vector2Int((int)mousePos.x, (int)mousePos.y);
+    }
+
+    public void clearCells() {
+        aliveCells = new HashSet<Vector2Int>();
     }
 }

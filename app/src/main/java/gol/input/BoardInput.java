@@ -10,10 +10,11 @@ public class BoardInput {
     private KeyBinding keyBind;
     private HashMap<String, Integer> keyCooldownTimer;
 
-    private final int KEY_COOLDOWN = 200;
+    private final int KEY_COOLDOWN = 100;
     private final double ZOOM_MULT = 1.5;
     private final double MOVEMENT_MULT = 0.1;
-    private final int STEP_TIME_INTERVAL = 25;
+    private final int MAX_STEP_TIME = 750;
+    private final int STEP_TIME_INTERVAL = (int)(MAX_STEP_TIME/10);
 
     private int stepTimeMillis;
     private boolean stepAuto;
@@ -34,7 +35,7 @@ public class BoardInput {
 
         run = true;
         stepAuto = false;
-        stepTimeMillis = 400;
+        stepTimeMillis = STEP_TIME_INTERVAL*5;
         
         keyCooldownTimer = new HashMap<String, Integer>();
 
@@ -50,6 +51,7 @@ public class BoardInput {
         hashPutInit(keyBind.speedUp());
         hashPutInit(keyBind.speedDown());
         hashPutInit(keyBind.toOrigin());
+        hashPutInit(keyBind.clear());
     }
 
     public void checkKeys() {
@@ -108,18 +110,24 @@ public class BoardInput {
         }
 
         if (keyCanBePressed(keyBind.speedUp())) {
-            if (stepTimeMillis > 1)
-                stepTimeMillis = Math.max(stepTimeMillis - STEP_TIME_INTERVAL, 1);
+            if (stepTimeMillis > 2)
+                stepTimeMillis = Math.max(stepTimeMillis - STEP_TIME_INTERVAL, 2);
             startTimer(keyBind.speedUp());
         }
 
         if (keyCanBePressed(keyBind.speedDown())) {
-            stepTimeMillis += STEP_TIME_INTERVAL;
+            if (stepTimeMillis < MAX_STEP_TIME)
+                stepTimeMillis += STEP_TIME_INTERVAL;
             startTimer(keyBind.speedDown());
         }
 
         if (keyCanBePressed(keyBind.toOrigin())) {
             screenPos = new Vector2(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2);
+            startTimer(keyBind.toOrigin());
+        }
+
+        if (keyCanBePressed(keyBind.clear())) {
+            b.clearCells();
             startTimer(keyBind.toOrigin());
         }
     }
@@ -147,10 +155,8 @@ public class BoardInput {
             cellScreenLen = (int)Math.round(cellScreenLen/ZOOM_MULT);
         }
 
-        System.out.println(cellScreenLen);
-
-        if (cellScreenLen < 1)
-            cellScreenLen = 1;
+        if (cellScreenLen < 2)
+            cellScreenLen = 2;
     }
 
     // get methods
@@ -172,5 +178,10 @@ public class BoardInput {
     
     public int getStepTimeMillis() {
         return stepTimeMillis;
+    }
+
+    public int getSpeed0to10() {
+        int value = (int)Math.ceil(10*(MAX_STEP_TIME-stepTimeMillis)/(float)MAX_STEP_TIME);
+        return value;
     }
 }
