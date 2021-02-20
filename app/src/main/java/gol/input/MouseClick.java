@@ -5,11 +5,11 @@ import java.awt.event.MouseListener;
 import java.util.HashSet;
 import java.util.Set;
 
-public class MouseClicks implements MouseListener {
+public class MouseClick implements MouseListener {
 
     Set<Integer> buttonsPressed;
 
-    public MouseClicks() {
+    public MouseClick() {
         super();
 
         buttonsPressed = new HashSet<Integer>();

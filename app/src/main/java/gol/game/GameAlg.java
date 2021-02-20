@@ -3,6 +3,8 @@ package gol.game;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import gol.util.Vector2Int;
+
 public class GameAlg {
 
     private HashSet<Vector2Int> aliveCells;

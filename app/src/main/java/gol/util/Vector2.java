@@ -1,4 +1,4 @@
-package gol.game;
+package gol.util;
 
 import com.stuypulse.stuylib.math.Angle;
 

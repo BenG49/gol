@@ -3,7 +3,7 @@ package gol.input;
 import java.awt.Color;
 
 import gol.display.Display;
-import gol.game.Vector2;
+import gol.util.Vector2;
 
 import com.stuypulse.stuylib.util.chart.KeyTracker;
 import com.stuypulse.stuylib.util.chart.MouseTracker;
@@ -11,7 +11,7 @@ import com.stuypulse.stuylib.util.chart.MouseTracker;
 public class InputDisplay extends Display {
     private KeyTracker keyboard;
     private MouseTracker mouse;
-    private MouseClicks mouseClicks;
+    private MouseClick mouseClicks;
 
     public InputDisplay() { this(500, 500, Color.WHITE); }
     public InputDisplay(Color background) { this(500, 500, background); }
@@ -20,7 +20,7 @@ public class InputDisplay extends Display {
 
         keyboard = new KeyTracker();
         mouse = new MouseTracker(this);
-        mouseClicks = new MouseClicks();
+        mouseClicks = new MouseClick();
 
         addMouseListener(mouseClicks);
         addKeyListener(keyboard);

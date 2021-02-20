@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import gol.game.Board;
-import gol.game.Vector2;
+import gol.util.Vector2;
 
 public class BoardInput {
     private Board b;
@@ -183,6 +183,20 @@ public class BoardInput {
     }
 
     // get methods
+    public String[] getKeyGuide() {
+        return new String[] {
+            keyBind.toggleAutoKey()+                    ": toggle between step and auto modes",
+            keyBind.up()+","+keyBind.left()+","+keyBind.down()+","+keyBind.right()+": move around",
+            keyBind.zoomIn()+","+keyBind.zoomOut()+     ": zoom in and out, respectively",
+            keyBind.speedUp()+","+keyBind.speedDown()+  ": raise and lower the auto mode speed (10 is as fast as possible)",
+            keyBind.singleStepKey()+                    ": single step when in single step mode",
+            keyBind.toOrigin()+                         ": jump back to the origin if you get lost",
+            keyBind.clear()+                            ": clear the board",
+            keyBind.toggleOptimized()+                  ": toggle on an optimized mode for running complex simulations fast",
+            keyBind.mode1()+","+keyBind.mode2()+        ": switch to selection mode 1 and 2"
+        };
+    }
+
     public boolean getStepAuto() {
         return stepAuto;
     }

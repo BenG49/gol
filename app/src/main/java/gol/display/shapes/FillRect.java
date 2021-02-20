@@ -1,7 +1,7 @@
 package gol.display.shapes;
 
 import java.awt.*;
-import gol.game.Vector2Int;
+import gol.util.Vector2Int;
 
 public class FillRect extends Shape {
     private final int x, y, width, height, border;

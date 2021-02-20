@@ -6,14 +6,16 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.awt.Color;
 import java.awt.Font;
 
 import gol.display.shapes.*;
+import gol.display.shapes.Text.ScreenPos;
+import gol.display.ui.*;
 import gol.game.schematic.Schematic;
-import gol.input.BoardInput;
-import gol.input.InputDisplay;
-import gol.input.KeyBinding;
+import gol.input.*;
+import gol.util.*;
 
 public class Board extends InputDisplay {
 
@@ -30,6 +32,8 @@ public class Board extends InputDisplay {
     private BoardInput input;
     public GameAlg game;
     private List<Schematic> schematics;
+    
+    private List<TextBoxElement> text;
 
     private static final int DEFAULT_WIDTH = 1000;
     private static final int OPTIMIZED_DRAW_INTERVAL = 10;
@@ -49,6 +53,11 @@ public class Board extends InputDisplay {
         selectA = new Vector2Int(0, 0);
         selectB = new Vector2Int(0, 0);
         promptingSave = false;
+
+        text = new ArrayList<TextBoxElement>(Arrays.asList(
+            new TextBoxElement(new RectType(0, HEIGHT/2, WIDTH/2, HEIGHT/2), this),
+            new TextBoxElement(new RectType(WIDTH/2, HEIGHT/2, WIDTH/2, HEIGHT/2), this)
+        ));
     }
 
     public void run() {
@@ -202,12 +211,15 @@ public class Board extends InputDisplay {
             projectToScreen(getMouseGamePos(), shapes, true);
         
         
-        shapes.add(new Text("Steps: "+game.getStepCount(),   5, HEIGHT-10,         Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
-        shapes.add(new Text("Speed: "+input.getSpeed0to10(), WIDTH-115, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
-        shapes.add(new Text(new Vector2Int(
-            WIDTH/input.getCellScreenLen()/2,
-            HEIGHT/input.getCellScreenLen()/2).add(input.getScreenPos().floor()).toString(),
-            5, HEIGHT-35, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+        // bottom left
+        text.get(0).setContents(new Text(new String[] {
+                new Vector2Int(WIDTH/input.getCellScreenLen()/2, HEIGHT/input.getCellScreenLen()/2).add(input.getScreenPos().floor()).toString(),
+                "Steps: "+game.getStepCount()
+            }, ScreenPos.BOT_LEFT, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+        // bottom right
+        shapes.add(new Text(new String[] {
+            "Speed: "+input.getSpeed0to10()
+        }, ScreenPos.BOT_RIGHT, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
     }
 
     private void projectToScreen(Vector2Int pos, List<Shape> shapes, boolean highlight) {

@@ -1,4 +1,4 @@
-package gol.game;
+package gol.util;
 
 import com.stuypulse.stuylib.math.Angle;
 
@@ -68,6 +68,10 @@ public class Vector2Int {
     public boolean within(Vector2Int a, Vector2Int b) {
         return this.x >= Math.min(a.x, b.x) && this.x <= Math.max(a.x, b.x)
             && this.y >= Math.min(a.y, b.y) && this.y <= Math.max(a.y, b.y);
+    }
+
+    public Vector2 toVector2() {
+        return new Vector2(this.x, this.y);
     }
 
     // thanks to Sam B from StuyLib for this method

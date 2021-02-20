@@ -9,7 +9,7 @@ import com.stuypulse.stuylib.math.Angle;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import gol.game.Vector2Int;
+import gol.util.Vector2Int;
 
 public class Schematic {
 

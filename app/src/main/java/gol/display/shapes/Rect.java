@@ -1,7 +1,7 @@
 package gol.display.shapes;
 
 import java.awt.*;
-import gol.game.Vector2Int;
+import gol.util.Vector2Int;
 
 public class Rect extends Shape {
     private final int x, y, width, height, border;
@@ -35,5 +35,9 @@ public class Rect extends Shape {
         g.drawRect(x, y, width, height);
 
         return g;
+    }
+
+    public int[] getDimensions() {
+        return new int[] {x, y, width, height };
     }
 }
