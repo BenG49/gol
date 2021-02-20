@@ -25,11 +25,14 @@ public class Board extends InputDisplay {
     private boolean lastRightMouse;
     private Vector2Int selectA;
     private Vector2Int selectB;
+    private boolean promptingSave;
 
     private BoardInput input;
     public GameAlg game;
+    private List<Schematic> schematics;
 
     private static final int DEFAULT_WIDTH = 1000;
+    private static final int OPTIMIZED_DRAW_INTERVAL = 10;
 
     public Board(HashSet<Vector2Int> aliveCells) { this(aliveCells, 25, new KeyBinding()); }
     public Board(Schematic schem) { this(schem.getData(), 25, new KeyBinding()); }
@@ -43,6 +46,9 @@ public class Board extends InputDisplay {
         betweenSteps = false;
         lastLeftMouse = false;
         lastRightMouse = false;
+        selectA = new Vector2Int(0, 0);
+        selectB = new Vector2Int(0, 0);
+        promptingSave = false;
     }
 
     public void run() {
@@ -54,51 +60,66 @@ public class Board extends InputDisplay {
                 if (input.getStepAuto())
                     game.step();
 
-                drawBoardOptimized(outputShapes);
+                if (game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
+                    drawBoardOptimized(outputShapes);
+            } else if (promptingSave) {
+                // drawBoard is so inefficient that its hard to get keypresses in
+                drawBoard(outputShapes);
+                schemSavePrompt(outputShapes);
             } else {
-            if (input.getStepAuto()) {
-                if (!betweenSteps) {
-                    game.step();
+                if (input.getStepAuto()) {
+                    if (!betweenSteps) {
+                        game.step();
 
-                    if (input.getStepTimeMillis() > 1) {
-                        betweenSteps = true;
-                        stepTimerTask = new TimerTask() {
-                            public void run() {
-                                betweenSteps = false;
-                            }
-                        };
+                        if (input.getStepTimeMillis() > 1) {
+                            betweenSteps = true;
+                            stepTimerTask = new TimerTask() {
+                                public void run() {
+                                    betweenSteps = false;
+                                }
+                            };
 
-                        stepTimer.schedule(stepTimerTask, input.getStepTimeMillis());
+                            stepTimer.schedule(stepTimerTask, input.getStepTimeMillis());
+                        }
                     }
                 }
-            }
-            drawBoard(outputShapes);
-            input.checkKeys();
-            checkMouseClicks();
+                // 8411 steps non optimized 30 secs full speed
+                // 436730 steps optimized 30 secs
+
+                drawBoard(outputShapes);
+                input.checkKeys();
+                checkMouseClicks();
             }
 
-            draw(outputShapes);
+            if (!(input.getRunOptimized() && game.getStepCount() % 10 > 0))
+                draw(outputShapes);
         }
     }
 
     private void checkMouseClicks() {
+        int selectMode = input.getSelectMode();
         // LEFT CLICK
         if (getButtonPressed(1)) {
             // just clicked
-            if (!lastLeftMouse)
-                selectA = getMouseGamePos();
+            if (!lastLeftMouse) {
+                if (selectMode == 1)
+                    selectA = getMouseGamePos();
+            }
 
             Vector2Int mousePos = getMouseGamePos();
 
             // ADD CELL
-            if (!game.hasCell(mousePos))
+            if (selectMode == 0)
                 game.addCell(mousePos);
 
             lastLeftMouse = true;
         } else {
             // just released
             if (lastLeftMouse) {
-                selectB = getMouseGamePos();
+                if (selectMode == 1) {
+                    selectB = getMouseGamePos();
+                    promptingSave = true;
+                }
 
                 lastLeftMouse = false;
             }
@@ -109,7 +130,7 @@ public class Board extends InputDisplay {
             Vector2Int mousePos = getMouseGamePos();
 
             // REMOVE CELL
-            if (game.hasCell(mousePos))
+            if (selectMode == 0 && game.hasCell(mousePos))
                 game.removeCell(mousePos);
 
             lastRightMouse = true;
@@ -134,6 +155,12 @@ public class Board extends InputDisplay {
         
             projectToScreen(pos, shapes, false);
         }
+
+        // pause indicator
+        if (!input.getStepAuto()) {
+            shapes.add(new FillRect(10, 10, 12, 40, 0, Color.WHITE));
+            shapes.add(new FillRect(30, 10, 12, 40, 0, Color.WHITE));
+        }
     }
 
     public void drawBoard(List<Shape> shapes) {
@@ -149,9 +176,31 @@ public class Board extends InputDisplay {
         projectToScreen(new Vector2Int(-2, 0), shapes, true);
         projectToScreen(new Vector2Int(0, -2), shapes, true);
 
+        // selection area
+        if (input.getSelectMode() == 1 && getButtonPressed(1)) {
+            int cellLen = input.getCellScreenLen();
+            Vector2 screenPos = input.getScreenPos();
+
+            Vector2Int drawPos = selectA.sub(screenPos).mul(cellLen).floor();
+            Vector2 mouseScreenPos = new Vector2(getMouse().x*WIDTH, (1-getMouse().y)*HEIGHT);
+            // TODO: make this account for zoom
+            Vector2Int size = roundToCellLen(mouseScreenPos.add(screenPos).sub(drawPos).ceil());
+
+            if (size.x < 0) {
+                drawPos.setX(drawPos.x+size.x-cellLen);
+                size.setX(Math.abs(size.x));
+            }
+            if (size.y < 0) {
+                drawPos.setY(drawPos.y+size.y-cellLen);
+                size.setY(Math.abs(size.y));
+            }
+
+            shapes.add(new FillRect(drawPos, size, 0, new Color(1f, 1f, 1f, 0.5f)));
+        }
         // mouse highlight
-        if (getMouse().x > 0 && getMouse().x < 1 && getMouse().y > 0 && getMouse().y < 1)
+        else if (getMouse().x > 0 && getMouse().x < 1 && getMouse().y > 0 && getMouse().y < 1)
             projectToScreen(getMouseGamePos(), shapes, true);
+        
         
         shapes.add(new Text("Steps: "+game.getStepCount(),   5, HEIGHT-10,         Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
         shapes.add(new Text("Speed: "+input.getSpeed0to10(), WIDTH-115, HEIGHT-10, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
@@ -164,7 +213,7 @@ public class Board extends InputDisplay {
     private void projectToScreen(Vector2Int pos, List<Shape> shapes, boolean highlight) {
         final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);
 
-        Vector2 drawPos =  pos.sub(input.getScreenPos()).mul(input.getCellScreenLen());
+        Vector2Int drawPos = pos.sub(input.getScreenPos()).mul(input.getCellScreenLen()).round();
         Color color;
 
         if (highlight)
@@ -172,13 +221,41 @@ public class Board extends InputDisplay {
         else
             color = Color.WHITE;
 
-        shapes.add(new FillRect((int)drawPos.round().x, (int)drawPos.round().y,
-            CELL_WIDTH, CELL_WIDTH, 0, color));
+        shapes.add(new FillRect(drawPos, CELL_WIDTH, 0, color));
     }
 
     // TODO: optimize by having either cache or checking if mouse has moved
     public Vector2Int getMouseGamePos() {
-        Vector2 mousePos = new Vector2(getMouse().x, 1-getMouse().y).mul(HEIGHT/input.getCellScreenLen()).add(input.getScreenPos()).floor();
-        return new Vector2Int((int)mousePos.x, (int)mousePos.y);
+        Vector2Int mousePos = new Vector2(getMouse().x, 1-getMouse().y).mul(HEIGHT/input.getCellScreenLen()).add(input.getScreenPos()).floor();
+        return new Vector2Int(mousePos.x, mousePos.y);
+    }
+
+    private Vector2Int roundToCellLen(Vector2Int pos) {
+        int cellLen = input.getCellScreenLen();
+        return new Vector2Int(pos.x - pos.x % cellLen, pos.y - pos.y % cellLen).add((int)(cellLen*0.95));
+    }
+
+    private void schemSavePrompt(List<Shape> shapes) {
+        shapes.add(new Text("Type "+input.keyBind.saveKey()+" to save, "+input.keyBind.cancelKey()+" to exit",
+                            new Vector2Int(100, HEIGHT/2-50), Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));
+
+        int choice = input.checkSavePrompt();
+
+        if (getButtonPressed(1) || getButtonPressed(3))
+            promptingSave = false;
+
+        if (choice != 0) {
+            if (input.checkSavePrompt() == 1) {
+                Schematic temp = new Schematic(game.getIterator(), selectA, selectB);
+                try {
+                    schematics.add(temp);
+                } catch(NullPointerException e) {
+                    schematics = new ArrayList<Schematic>();
+                    schematics.add(temp);
+                }
+            }
+
+            promptingSave = false;
+        }
     }
 }

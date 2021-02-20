@@ -3,7 +3,7 @@ package gol.game;
 import com.stuypulse.stuylib.math.Angle;
 
 public class Vector2 {
-    public final double x, y;
+    public double x, y;
 
     public Vector2(double x, double y) {
         this.x = x;
@@ -15,6 +15,14 @@ public class Vector2 {
         y = xy;
     }
 
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
+
     public Vector2 add(Vector2 a) {
         return new Vector2(this.x+a.x, this.y+a.y);
     }
@@ -23,12 +31,33 @@ public class Vector2 {
         return new Vector2(this.x-a.x, this.y-a.y);
     }
 
+    public Vector2 add(Vector2Int a) {
+        return new Vector2(this.x+a.x, this.y+a.y);
+    }
+
+    public Vector2 sub(Vector2Int a) {
+        return new Vector2(this.x-a.x, this.y-a.y);
+    }
+
+    public Vector2 add(double a) {
+        return new Vector2(this.x+a, this.y+a);
+    }
+
+    public Vector2 sub(double a) {
+        return new Vector2(this.x-a, this.y-a);
+    }
+    
     public Vector2 mul(double a) {
         return new Vector2(this.x*a, this.y*a);
     }
 
     public Vector2 div(double a) {
         return new Vector2(this.x/a, this.y/a);
+    }
+
+    public boolean within(Vector2 a, Vector2 b) {
+        return this.x >= Math.min(a.x, b.x) && this.x <= Math.max(a.x, b.x)
+            && this.y >= Math.min(a.y, b.y) && this.y <= Math.max(a.y, b.y);
     }
 
     public boolean equals(Object a) {
@@ -52,16 +81,16 @@ public class Vector2 {
         return origin.add(out);
     }
 
-    public Vector2 round() {
-        return new Vector2(Math.round(x), Math.round(y));
+    public Vector2Int round() {
+        return new Vector2Int((int)Math.round(x), (int)Math.round(y));
     }
 
-    public Vector2 ceil() {
-        return new Vector2(Math.ceil(x), Math.ceil(y));
+    public Vector2Int ceil() {
+        return new Vector2Int((int)Math.ceil(x), (int)Math.ceil(y));
     }
 
-    public Vector2 floor() {
-        return new Vector2(Math.floor(x), Math.floor(y));
+    public Vector2Int floor() {
+        return new Vector2Int((int)Math.floor(x), (int)Math.floor(y));
     }
 
     public int hashCode() {

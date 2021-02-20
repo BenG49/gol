@@ -9,9 +9,10 @@ import gol.game.Vector2;
 
 public class BoardInput {
     private Board b;
-    private KeyBinding keyBind;
     private HashSet<String> lastKeyPressed;
     private HashMap<String, Integer> keyRepeat;
+
+    public KeyBinding keyBind;
 
     // multiplier for zooming, higher is faster zooming
     private final double ZOOM_MULT = 1.5;
@@ -131,7 +132,14 @@ public class BoardInput {
             selectMode = 1;
     }
 
-    // TODO: add optimized version
+    public int checkSavePrompt() {
+        if (b.hasKey(keyBind.saveKey()))
+            return 1;
+        if (b.hasKey(keyBind.cancelKey()))
+            return -1;
+        return 0;
+    }
+
     private boolean keyCanBePressed(String key) {
         // key held down
         if (b.hasKey(key) && !KEYS_DONT_REPEAT.contains(key)) {

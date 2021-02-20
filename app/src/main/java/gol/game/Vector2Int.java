@@ -3,7 +3,7 @@ package gol.game;
 import com.stuypulse.stuylib.math.Angle;
 
 public class Vector2Int {
-    public final int x, y;
+    public int x, y;
 
     public Vector2Int(int x, int y) {
         this.x = x;
@@ -13,6 +13,14 @@ public class Vector2Int {
     public Vector2Int(int xy) {
         x = xy;
         y = xy;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
     }
 
     public Vector2Int add(Vector2Int a) {
@@ -31,11 +39,19 @@ public class Vector2Int {
         return new Vector2(this.x-a.x, this.y-a.y);
     }
 
-    public Vector2 mul(double a) {
-        return new Vector2(this.x*a, this.y*a);
+    public Vector2Int add(int a) {
+        return new Vector2Int(this.x+a, this.y+a);
     }
 
-    public Vector2 div(double a) {
+    public Vector2Int sub(int a) {
+        return new Vector2Int(this.x-a, this.y-a);
+    }
+
+    public Vector2Int mul(int a) {
+        return new Vector2Int(this.x*a, this.y*a);
+    }
+
+    public Vector2 div(int a) {
         return new Vector2(this.x/a, this.y/a);
     }
 
@@ -47,6 +63,11 @@ public class Vector2Int {
 
         Vector2Int temp = (Vector2Int) a;
         return this.x == temp.x && this.y == temp.y;
+    }
+
+    public boolean within(Vector2Int a, Vector2Int b) {
+        return this.x >= Math.min(a.x, b.x) && this.x <= Math.max(a.x, b.x)
+            && this.y >= Math.min(a.y, b.y) && this.y <= Math.max(a.y, b.y);
     }
 
     // thanks to Sam B from StuyLib for this method

@@ -1,7 +1,7 @@
 package gol.display.shapes;
 
-import java.awt.Color;
 import java.awt.*;
+import gol.game.Vector2Int;
 
 public class Text extends Shape {
     private final String text;
@@ -9,6 +9,9 @@ public class Text extends Shape {
     private final Color c;
     private final Font font;
 
+    public Text(String text, Vector2Int pos, Color c, Font font) {
+        this(text, pos.x, pos.y, c, font);
+    }
     public Text(String text, int x, int y, Color c, Font font) {
         this.text = text;
         this.x = x;

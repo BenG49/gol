@@ -1,12 +1,21 @@
 package gol.display.shapes;
 
-import java.awt.Color;
 import java.awt.*;
+import gol.game.Vector2Int;
 
 public class FillRect extends Shape {
     private final int x, y, width, height, border;
     private final Color fill;
 
+    public FillRect(Vector2Int pos, Vector2Int size, int border, Color background) {
+        this(pos.x, pos.y, size.x, size.y, border, background);
+    }
+    public FillRect(Vector2Int pos, int width, int height, int border, Color background) {
+        this(pos.x, pos.y, width, height, border, background);
+    }
+    public FillRect(Vector2Int pos, int size, int border, Color background) {
+        this(pos.x, pos.y, size, size, border, background);
+    }
     public FillRect(int x, int y, int width, int height, int border, Color fill) {
         this.x = x;
         this.y = y;

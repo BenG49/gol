@@ -54,6 +54,17 @@ public class Schematic {
         }
     };
 
+    public Schematic(Iterator<Vector2Int> allCells, Vector2Int selA, Vector2Int selB) {
+        cells = new HashSet<Vector2Int>();
+
+        while (allCells.hasNext()) {
+            Vector2Int temp = allCells.next();
+            if (!temp.within(selA, selB))
+                continue;
+            
+            cells.add(temp);
+        }
+    }
     public Schematic(HashSet<Vector2Int> cells, Vector2Int origin) {
         this.cells = cells;
         this.origin = origin;
