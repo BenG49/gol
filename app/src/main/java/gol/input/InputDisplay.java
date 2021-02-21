@@ -27,11 +27,26 @@ public class InputDisplay extends Display {
     }
 
     public boolean hasKey(String key) {
-        return keyboard.hasKey(key);
+        if (key.contains(" "))
+            return hasKeyChord(key);
+        else
+            return keyboard.hasKey(key);
+    }
+
+    private boolean hasKeyChord(String chord) {
+        String[] keys = chord.split(" ");
+        for (String i : keys)
+            if (!hasKey(i))
+                return false;
+            
+        return true;
     }
     
-    public Vector2 getMouse() {
-        return new Vector2(mouse.getMouseX(), mouse.getMouseY());
+    public Vector2 getMousePos(boolean menu) {
+        if (menu)
+            return new Vector2(mouse.getMouseX(), mouse.getMouseY()*(1f/0.975f));
+        else
+            return new Vector2(mouse.getMouseX(), mouse.getMouseY());
     }
 
     public boolean getButtonPressed(int button) {

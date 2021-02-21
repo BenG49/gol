@@ -13,9 +13,8 @@ public class KeyBinding {
             "f",
             "c",
             "F1",
-            "?",
             "o", "p",
-            "1", "2"
+            "Ctrl 1", "Ctrl 2"
         });
 
         String[] array;
@@ -87,23 +86,19 @@ public class KeyBinding {
         return binding[12];
     }
 
-    public String helpKey() {
+    public String saveKey() {
         return binding[13];
     }
 
-    public String saveKey() {
+    public String cancelKey() {
         return binding[14];
     }
 
-    public String cancelKey() {
+    public String mode1() {
         return binding[15];
     }
 
-    public String mode1() {
-        return binding[16];
-    }
-
     public String mode2() {
-        return binding[17];
+        return binding[16];
     }
 }

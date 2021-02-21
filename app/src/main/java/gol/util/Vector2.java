@@ -60,6 +60,10 @@ public class Vector2 {
             && this.y >= Math.min(a.y, b.y) && this.y <= Math.max(a.y, b.y);
     }
 
+    public Vector2 floorToInterval(double interval) {
+        return new Vector2(this.x - this.x%interval, this.y - this.y % interval);
+    }
+
     public boolean equals(Object a) {
         if (!(a instanceof Vector2))
             return false;

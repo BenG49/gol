@@ -29,9 +29,9 @@ public class BoardInput {
     
     // <--THESE VALUES ARE COMPLETELY DEPENDENT ON PROGRAM SPEED-->
     // amount of time to wait until spamming
-    private final int KEY_REPEAT_CUTOFF = 250;
+    private final int KEY_REPEAT_CUTOFF = 400;
     // interval to wait between keys to activate when spamming
-    private final int KEY_REPEAT_MODULO = 30;
+    private final int KEY_REPEAT_MODULO = 80;
 
     private int stepTimeMillis;
     private boolean stepAuto;

@@ -55,6 +55,19 @@ public class Vector2Int {
         return new Vector2(this.x/a, this.y/a);
     }
 
+    public boolean within(Vector2Int a, Vector2Int b) {
+        return this.x >= Math.min(a.x, b.x) && this.x <= Math.max(a.x, b.x)
+            && this.y >= Math.min(a.y, b.y) && this.y <= Math.max(a.y, b.y);
+    }
+
+    public Vector2 toVector2() {
+        return new Vector2(this.x, this.y);
+    }
+
+    public Vector2Int floorToInterval(int interval) {
+        return new Vector2Int(this.x - this.x%interval, this.y - this.y % interval);
+    }
+
     public boolean equals(Object a) {
         if (!(a instanceof Vector2Int))
             return false;
@@ -63,15 +76,6 @@ public class Vector2Int {
 
         Vector2Int temp = (Vector2Int) a;
         return this.x == temp.x && this.y == temp.y;
-    }
-
-    public boolean within(Vector2Int a, Vector2Int b) {
-        return this.x >= Math.min(a.x, b.x) && this.x <= Math.max(a.x, b.x)
-            && this.y >= Math.min(a.y, b.y) && this.y <= Math.max(a.y, b.y);
-    }
-
-    public Vector2 toVector2() {
-        return new Vector2(this.x, this.y);
     }
 
     // thanks to Sam B from StuyLib for this method

@@ -59,10 +59,8 @@ public class Text extends Shape {
         }
 
         public int getBaseHeight(int y, FontMetrics metrics, int lineCount) {
-            lineCount--;
-
             if (presetY == -1)
-                return y;
+                return y+PADDING;
             else if (presetY == 1)
                 return y-lineCount*(metrics.getHeight()+PADDING);
             else

@@ -5,14 +5,20 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import gol.display.shapes.*;
 import gol.display.shapes.Text.ScreenPos;
-import gol.display.ui.*;
 import gol.game.schematic.Schematic;
 import gol.input.*;
 import gol.util.*;
@@ -32,16 +38,23 @@ public class Board extends InputDisplay {
     private BoardInput input;
     public GameAlg game;
     private List<Schematic> schematics;
-    
-    private List<TextBoxElement> text;
 
     private static final int DEFAULT_WIDTH = 1000;
     private static final int OPTIMIZED_DRAW_INTERVAL = 10;
+    private static final boolean USING_MENU = true;
 
-    public Board(HashSet<Vector2Int> aliveCells) { this(aliveCells, 25, new KeyBinding()); }
-    public Board(Schematic schem) { this(schem.getData(), 25, new KeyBinding()); }
+    public Board(HashSet<Vector2Int> aliveCells) {
+        this(aliveCells, 25, new KeyBinding());
+    }
+
+    public Board(Schematic schem) {
+        this(schem.getData(), 25, new KeyBinding());
+    }
+
     public Board(HashSet<Vector2Int> aliveCells, int cellScreenLen, KeyBinding binding) {
         super(DEFAULT_WIDTH, DEFAULT_WIDTH, Color.BLACK);
+
+        createMenu();
 
         game = new GameAlg(aliveCells);
         input = new BoardInput(this, binding, cellScreenLen);
@@ -53,11 +66,6 @@ public class Board extends InputDisplay {
         selectA = new Vector2Int(0, 0);
         selectB = new Vector2Int(0, 0);
         promptingSave = false;
-
-        text = new ArrayList<TextBoxElement>(Arrays.asList(
-            new TextBoxElement(new RectType(0, HEIGHT/2, WIDTH/2, HEIGHT/2), this),
-            new TextBoxElement(new RectType(WIDTH/2, HEIGHT/2, WIDTH/2, HEIGHT/2), this)
-        ));
     }
 
     public void run() {
@@ -110,10 +118,9 @@ public class Board extends InputDisplay {
         // LEFT CLICK
         if (getButtonPressed(1)) {
             // just clicked
-            if (!lastLeftMouse) {
+            if (!lastLeftMouse)
                 if (selectMode == 1)
                     selectA = getMouseGamePos();
-            }
 
             Vector2Int mousePos = getMouseGamePos();
 
@@ -148,20 +155,19 @@ public class Board extends InputDisplay {
     }
 
     public void drawBoardOptimized(List<Shape> shapes) {
-        final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);
+        final int CELL_WIDTH = (int) (input.getCellScreenLen() * 0.95);
 
-        Vector2 max = input.getScreenPos().add(new Vector2(
-            input.getScreenPos().x+WIDTH*input.getCellScreenLen(),
-            input.getScreenPos().y+HEIGHT*input.getCellScreenLen()
-        ));
+        Vector2 max = input.getScreenPos().add(new Vector2(input.getScreenPos().x + WIDTH * input.getCellScreenLen(),
+                input.getScreenPos().y + HEIGHT * input.getCellScreenLen()));
         Iterator<Vector2Int> iterator = game.getIterator();
 
         while (iterator.hasNext()) {
             Vector2Int pos = iterator.next();
 
-            if (pos.x+CELL_WIDTH < input.getScreenPos().x || pos.x > max.x || pos.y+CELL_WIDTH < input.getScreenPos().y || pos.y > max.y)
+            if (pos.x + CELL_WIDTH < input.getScreenPos().x || pos.x > max.x
+                    || pos.y + CELL_WIDTH < input.getScreenPos().y || pos.y > max.y)
                 continue;
-        
+
             projectToScreen(pos, shapes, false);
         }
 
@@ -176,14 +182,10 @@ public class Board extends InputDisplay {
         drawBoardOptimized(shapes);
 
         // cross around 0,0
-        projectToScreen(new Vector2Int(1, 0), shapes, true);
-        projectToScreen(new Vector2Int(0, 1), shapes, true);
-        projectToScreen(new Vector2Int(-1, 0), shapes, true);
-        projectToScreen(new Vector2Int(0, -1), shapes, true);
-        projectToScreen(new Vector2Int(2, 0), shapes, true);
-        projectToScreen(new Vector2Int(0, 2), shapes, true);
-        projectToScreen(new Vector2Int(-2, 0), shapes, true);
-        projectToScreen(new Vector2Int(0, -2), shapes, true);
+        for (int y = -2; y < 3; y++)
+            for (int x = -2; x < 3; x++)
+                if (x == 0 || y == 0)
+                    projectToScreen(new Vector2Int(x, y), shapes, true);
 
         // selection area
         if (input.getSelectMode() == 1 && getButtonPressed(1)) {
@@ -191,39 +193,39 @@ public class Board extends InputDisplay {
             Vector2 screenPos = input.getScreenPos();
 
             Vector2Int drawPos = selectA.sub(screenPos).mul(cellLen).floor();
-            Vector2 mouseScreenPos = new Vector2(getMouse().x*WIDTH, (1-getMouse().y)*HEIGHT);
+            Vector2 mouseScreenPos = new Vector2(getMousePos(USING_MENU).x * WIDTH, (1 - getMousePos(USING_MENU).y) * HEIGHT);
             // TODO: make this account for zoom
-            Vector2Int size = roundToCellLen(mouseScreenPos.add(screenPos).sub(drawPos).ceil());
+            Vector2Int size = mouseScreenPos.add(screenPos).sub(drawPos).ceil().floorToInterval(cellLen).add(cellLen);
 
             if (size.x < 0) {
-                drawPos.setX(drawPos.x+size.x-cellLen);
+                drawPos.setX(drawPos.x + size.x - cellLen);
                 size.setX(Math.abs(size.x));
             }
             if (size.y < 0) {
-                drawPos.setY(drawPos.y+size.y-cellLen);
+                drawPos.setY(drawPos.y + size.y - cellLen);
                 size.setY(Math.abs(size.y));
             }
 
             shapes.add(new FillRect(drawPos, size, 0, new Color(1f, 1f, 1f, 0.5f)));
         }
         // mouse highlight
-        else if (getMouse().x > 0 && getMouse().x < 1 && getMouse().y > 0 && getMouse().y < 1)
+        else if (getMousePos(USING_MENU).x > 0 && getMousePos(USING_MENU).x < 1 && getMousePos(USING_MENU).y > 0 && getMousePos(USING_MENU).y < 1)
             projectToScreen(getMouseGamePos(), shapes, true);
-        
-        
+
         // bottom left
-        text.get(0).setContents(new Text(new String[] {
-                new Vector2Int(WIDTH/input.getCellScreenLen()/2, HEIGHT/input.getCellScreenLen()/2).add(input.getScreenPos().floor()).toString(),
-                "Steps: "+game.getStepCount()
-            }, ScreenPos.BOT_LEFT, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+        shapes.add(new Text(
+                new String[] {
+                        new Vector2Int(WIDTH / input.getCellScreenLen() / 2, HEIGHT / input.getCellScreenLen() / 2)
+                                .add(input.getScreenPos().floor()).toString(),
+                        "Steps: " + game.getStepCount() },
+                ScreenPos.BOT_LEFT, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
         // bottom right
-        shapes.add(new Text(new String[] {
-            "Speed: "+input.getSpeed0to10()
-        }, ScreenPos.BOT_RIGHT, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+        shapes.add(new Text("Speed: " + input.getSpeed0to10(), ScreenPos.BOT_RIGHT, WIDTH, Color.WHITE,
+                new Font("Cascadia Code", Font.PLAIN, 20)));
     }
 
     private void projectToScreen(Vector2Int pos, List<Shape> shapes, boolean highlight) {
-        final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);
+        final int CELL_WIDTH = (int) (input.getCellScreenLen() * 0.95);
 
         Vector2Int drawPos = pos.sub(input.getScreenPos()).mul(input.getCellScreenLen()).round();
         Color color;
@@ -237,19 +239,15 @@ public class Board extends InputDisplay {
     }
 
     // TODO: optimize by having either cache or checking if mouse has moved
+    // TODO: fix zoom not working with this
     public Vector2Int getMouseGamePos() {
-        Vector2Int mousePos = new Vector2(getMouse().x, 1-getMouse().y).mul(HEIGHT/input.getCellScreenLen()).add(input.getScreenPos()).floor();
-        return new Vector2Int(mousePos.x, mousePos.y);
-    }
-
-    private Vector2Int roundToCellLen(Vector2Int pos) {
-        int cellLen = input.getCellScreenLen();
-        return new Vector2Int(pos.x - pos.x % cellLen, pos.y - pos.y % cellLen).add((int)(cellLen*0.95));
+        return new Vector2(getMousePos(USING_MENU).x, 1 - getMousePos(USING_MENU).y).mul(HEIGHT / input.getCellScreenLen())
+                .add(input.getScreenPos()).floor();
     }
 
     private void schemSavePrompt(List<Shape> shapes) {
-        shapes.add(new Text("Type "+input.keyBind.saveKey()+" to save, "+input.keyBind.cancelKey()+" to exit",
-                            new Vector2Int(100, HEIGHT/2-50), Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));
+        shapes.add(new Text("Type " + input.keyBind.saveKey() + " to save, " + input.keyBind.cancelKey() + " to exit",
+                new Vector2Int(100, HEIGHT / 2 - 50), Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));
 
         int choice = input.checkSavePrompt();
 
@@ -261,7 +259,7 @@ public class Board extends InputDisplay {
                 Schematic temp = new Schematic(game.getIterator(), selectA, selectB);
                 try {
                     schematics.add(temp);
-                } catch(NullPointerException e) {
+                } catch (NullPointerException e) {
                     schematics = new ArrayList<Schematic>();
                     schematics.add(temp);
                 }
@@ -269,5 +267,29 @@ public class Board extends InputDisplay {
 
             promptingSave = false;
         }
+    }
+
+    private void createMenu() {
+        final JMenuBar menu = new JMenuBar();
+
+        // menus
+        JMenu fileMenu = new JMenu("File");
+        JMenu selectMode = new JMenu("Select");
+            JMenuItem normalMode = new JMenuItem("Normal mode");
+                normalMode.setActionCommand("mode1");
+                normalMode.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+
+                    }
+                });
+        JMenu helpMenu = new JMenu("Help");
+        
+        selectMode.add(normalMode);
+
+        menu.add(fileMenu);
+        menu.add(selectMode);
+        menu.add(helpMenu);
+        setJMenuBar(menu);
     }
 }
