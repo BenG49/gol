@@ -293,12 +293,23 @@ public class Board extends InputDisplay {
                     @Override
                     public void actionPerformed(ActionEvent e) { displayKeybinds = true; }
                 });
+        JMenu schem = new JMenu("Schematics");
+            JMenuItem load = new JMenuItem("Load Schematic");
+                load.setActionCommand("load");
+                load.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // TODO: add new selection mode where clicking places schem, mouse previews schem
+                    }
+                });
 
         fileMenu.add(lmao);
         helpMenu.add(keybinds);
+        schem.add(load);
 
         menu.add(fileMenu);
         menu.add(helpMenu);
+        menu.add(schem);
         setJMenuBar(menu);
     }
 }

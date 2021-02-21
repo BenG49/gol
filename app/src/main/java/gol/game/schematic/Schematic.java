@@ -56,7 +56,7 @@ public class Schematic {
     };
 
     public Schematic(Iterator<Vector2Int> allCells, Vector2Int selA, Vector2Int selB) {
-        this(constructor(allCells, selA, selB), new ArrayList<Schematic>(), Vector2Int.min(setToList(constructor(allCells, selA, selB))));
+        this(constructor(allCells, selA, selB), new ArrayList<Schematic>(), getRectMin(allCells));
     }
     public Schematic(HashSet<Vector2Int> cells, Vector2Int origin) { this(cells, new ArrayList<Schematic>(), origin); }
     public Schematic(List<Schematic> schematics) { this(new HashSet<Vector2Int>(), schematics, new Vector2Int(0, 0)); }
@@ -80,10 +80,26 @@ public class Schematic {
         return temp;
     }
 
-    private static List<Vector2Int> setToList(HashSet<Vector2Int> set) {
-        List<Vector2Int> temp = new ArrayList<Vector2Int>();
-        temp.addAll(set);
-        return temp;
+    private static Vector2Int getRectMin(Iterator<Vector2Int> allCells) {
+        Vector2Int output = new Vector2Int(0);
+
+        int i = 0;
+        while (allCells.hasNext()) {
+            Vector2Int temp = allCells.next();
+
+            if (i == 0) {
+                output = temp;
+                i++;
+                continue;
+            }
+
+            if (temp.x < output.x)
+                output.setX(temp.x);
+            if (temp.y < output.y)
+                output.setY(temp.y);
+        }
+
+        return output;
     }
 
     public Vector2Int getOrigin() {
@@ -151,5 +167,18 @@ public class Schematic {
             temp = rotate90(temp);
 
         return new HashSet<Vector2Int>(temp);
+    }
+
+    public static HashSet<Vector2Int> parseFile(HashSet<String> contents) {
+        HashSet<Vector2Int> output = new HashSet<Vector2Int>();
+        for (String current : contents) {
+            if (current.contains(".json"))
+                for (Vector2Int pos : parseFile(JSON.JSONRead(current)))
+                    output.add(pos);
+            else
+                output.add(new Vector2Int(current));
+        }
+
+        return output;
     }
 }
