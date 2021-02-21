@@ -34,10 +34,11 @@ public class Board extends InputDisplay {
     private Vector2Int selectA;
     private Vector2Int selectB;
     private boolean promptingSave;
+    private boolean displayKeybinds;
 
     private BoardInput input;
     public GameAlg game;
-    private List<Schematic> schematics;
+    private List<Schematic> tempSchematics;
 
     private static final int DEFAULT_WIDTH = 1000;
     private static final int OPTIMIZED_DRAW_INTERVAL = 10;
@@ -70,7 +71,7 @@ public class Board extends InputDisplay {
 
     public void run() {
         while (input.getRun()) {
-            List<Shape> outputShapes = new ArrayList<Shape>();
+            List<Shape> shapes = new ArrayList<Shape>();
 
             if (input.getRunOptimized()) {
                 input.checkKeysOptimized();
@@ -78,11 +79,13 @@ public class Board extends InputDisplay {
                     game.step();
 
                 if (game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
-                    drawBoardOptimized(outputShapes);
+                    drawBoardOptimized(shapes);
             } else if (promptingSave) {
-                // drawBoard is so inefficient that its hard to get keypresses in
-                drawBoard(outputShapes);
-                schemSavePrompt(outputShapes);
+                drawBoard(shapes);
+                schemSavePrompt(shapes);
+            } else if (displayKeybinds) {
+                drawBoard(shapes);
+                drawKeybindings(shapes);
             } else {
                 if (input.getStepAuto()) {
                     if (!betweenSteps) {
@@ -100,16 +103,17 @@ public class Board extends InputDisplay {
                         }
                     }
                 }
+                // laptop specs:
                 // 8411 steps non optimized 30 secs full speed
                 // 436730 steps optimized 30 secs
 
-                drawBoard(outputShapes);
+                drawBoard(shapes);
                 input.checkKeys();
                 checkMouseClicks();
             }
 
             if (!(input.getRunOptimized() && game.getStepCount() % 10 > 0))
-                draw(outputShapes);
+                draw(shapes);
         }
     }
 
@@ -246,8 +250,9 @@ public class Board extends InputDisplay {
     }
 
     private void schemSavePrompt(List<Shape> shapes) {
+        shapes.add(new FillRect(0, 0, WIDTH, HEIGHT, 0, new Color(0f, 0f, 0f, 0.5f)));
         shapes.add(new Text("Type " + input.keyBind.saveKey() + " to save, " + input.keyBind.cancelKey() + " to exit",
-                new Vector2Int(100, HEIGHT / 2 - 50), Color.WHITE, new Font("Cascadia Code", Font.BOLD, 24)));
+            ScreenPos.TOP_CENTER, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
 
         int choice = input.checkSavePrompt();
 
@@ -258,10 +263,10 @@ public class Board extends InputDisplay {
             if (input.checkSavePrompt() == 1) {
                 Schematic temp = new Schematic(game.getIterator(), selectA, selectB);
                 try {
-                    schematics.add(temp);
+                    tempSchematics.add(temp);
                 } catch (NullPointerException e) {
-                    schematics = new ArrayList<Schematic>();
-                    schematics.add(temp);
+                    tempSchematics = new ArrayList<Schematic>();
+                    tempSchematics.add(temp);
                 }
             }
 
@@ -269,26 +274,34 @@ public class Board extends InputDisplay {
         }
     }
 
+    public void drawKeybindings(List<Shape> shapes) {
+        shapes.add(new FillRect(0, 0, WIDTH, HEIGHT, 0, new Color(0f, 0f, 0f, 0.5f)));
+
+        for (Shape i : input.getKeyGuide())
+            shapes.add(i);
+        
+        if (input.checkKeybindPrompt())
+            displayKeybinds = false;
+    }
+
     private void createMenu() {
         final JMenuBar menu = new JMenuBar();
 
         // menus
         JMenu fileMenu = new JMenu("File");
-        JMenu selectMode = new JMenu("Select");
-            JMenuItem normalMode = new JMenuItem("Normal mode");
-                normalMode.setActionCommand("mode1");
-                normalMode.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-
-                    }
-                });
+            JMenuItem lmao = new JMenuItem("Lmao did you expect any file functionality");
         JMenu helpMenu = new JMenu("Help");
-        
-        selectMode.add(normalMode);
+            JMenuItem keybinds = new JMenuItem("Keybindings");
+                keybinds.setActionCommand("displayKeybinds");
+                keybinds.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) { displayKeybinds = true; }
+                });
+
+        fileMenu.add(lmao);
+        helpMenu.add(keybinds);
 
         menu.add(fileMenu);
-        menu.add(selectMode);
         menu.add(helpMenu);
         setJMenuBar(menu);
     }

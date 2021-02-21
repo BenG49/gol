@@ -1,10 +1,18 @@
 package gol.input;
 
+import java.awt.Font;
+import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import javax.swing.plaf.basic.BasicSplitPaneUI.KeyboardDownRightHandler;
+
+import gol.display.shapes.Shape;
+import gol.display.shapes.Text;
+import gol.display.shapes.Text.ScreenPos;
 import gol.game.Board;
+import gol.util.RectType;
 import gol.util.Vector2;
 
 public class BoardInput {
@@ -140,6 +148,13 @@ public class BoardInput {
         return 0;
     }
 
+    public boolean checkKeybindPrompt() {
+        if (b.hasKey(keyBind.cancelKey()))
+            return true;
+
+        return false;
+    }
+
     private boolean keyCanBePressed(String key) {
         // key held down
         if (b.hasKey(key) && !KEYS_DONT_REPEAT.contains(key)) {
@@ -183,17 +198,36 @@ public class BoardInput {
     }
 
     // get methods
-    public String[] getKeyGuide() {
-        return new String[] {
-            keyBind.toggleAutoKey()+                    ": toggle between step and auto modes",
-            keyBind.up()+","+keyBind.left()+","+keyBind.down()+","+keyBind.right()+": move around",
-            keyBind.zoomIn()+","+keyBind.zoomOut()+     ": zoom in and out, respectively",
-            keyBind.speedUp()+","+keyBind.speedDown()+  ": raise and lower the auto mode speed (10 is as fast as possible)",
-            keyBind.singleStepKey()+                    ": single step when in single step mode",
-            keyBind.toOrigin()+                         ": jump back to the origin if you get lost",
-            keyBind.clear()+                            ": clear the board",
-            keyBind.toggleOptimized()+                  ": toggle on an optimized mode for running complex simulations fast",
-            keyBind.mode1()+","+keyBind.mode2()+        ": switch to selection mode 1 and 2"
+    public Shape[] getKeyGuide() {
+        final int CENTER_RATIO = (int)(b.WIDTH*0.3);
+        final int BOTTOM_RATIO = (int)(b.HEIGHT*0.9);
+        final Font font = new Font("Cascadia Code", Font.PLAIN, 20);
+
+        return new Text[] {new Text(new String[] {
+                keyBind.toggleAutoKey()+                    ":",
+                keyBind.up()+","+keyBind.left()+","+keyBind.down()+","+keyBind.right()+":",
+                keyBind.zoomIn()+","+keyBind.zoomOut()+     ":",
+                keyBind.speedUp()+","+keyBind.speedDown()+  ":",
+                keyBind.singleStepKey()+                    ":",
+                keyBind.toOrigin()+                         ":",
+                keyBind.clear()+                            ":",
+                keyBind.toggleOptimized()+                  ":",
+                keyBind.mode1()+","+keyBind.mode2()+        ":"
+            }, ScreenPos.TOP_RIGHT, new RectType(0, 0, CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
+
+            new Text(new String[] {
+                "toggle pause and play",
+                "move around",
+                "zoom in and out, respectively",
+                "raise and lower the step speed (max 10)",
+                "single step when in single step mode",
+                "jump back to the origin if you get lost",
+                "clear the board",
+                "toggle optimized mode for running simulations fast",
+                "switch to selection mode 1 and 2"
+            }, ScreenPos.TOP_LEFT, new RectType(CENTER_RATIO, 0, b.WIDTH-CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
+
+            new Text("Press "+keyBind.cancelKey()+" to exit.", ScreenPos.BOT_CENTER, new RectType(0, BOTTOM_RATIO, b.WIDTH, b.HEIGHT-BOTTOM_RATIO), Color.WHITE, font)
         };
     }
 

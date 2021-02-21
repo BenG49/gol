@@ -31,6 +31,11 @@ dependencies {
 
     // StuyLib
     compile 'com.github.StuyPulse:StuyLib:v2021.0.7'
+
+    // JSON.Simple
+    compile 'org.slf4j:slf4j-api:1.7.25'
+    compile 'org.json:json:20160212'
+    compile 'com.googlecode.json-simple:json-simple:1.1.1'
 }
 
 application {

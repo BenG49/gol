@@ -15,6 +15,8 @@ public class Vector2Int {
         y = xy;
     }
 
+    // TODO: add asString constructor
+
     public void setX(int x) {
         this.x = x;
     }
