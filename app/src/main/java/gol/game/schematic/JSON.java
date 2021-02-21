@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.HashSet;
 
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 
 import org.json.simple.JSONObject;
@@ -54,7 +55,7 @@ public class JSON {
 
     public static HashSet<Vector2Int> loadJSON() {
         JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        chooser.setDialogTitle("Load Schematic");
+        chooser.setDialogTitle("Load");
         int r = chooser.showDialog(chooser, "Open");
 
         if (r == JFileChooser.APPROVE_OPTION)
@@ -63,5 +64,23 @@ public class JSON {
             System.out.println("The user cancelled the task");
             return null;
         }
+    }
+
+    public static void saveJSON(HashSet<Vector2Int> data) {
+        JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+        chooser.setDialogTitle("Save");
+        int r = chooser.showOpenDialog(null);
+
+        if (r == JFileChooser.APPROVE_OPTION) {
+            String path = chooser.getSelectedFile().getAbsolutePath();
+            String extension = ".json";
+
+            // adds .json extension
+            if (!path.endsWith(extension))
+                path = path.split("\\.")[0]+extension;
+
+            JSONWrite(data, path);
+        } else
+            System.out.println("The user cancelled the task");
     }
 }
