@@ -6,6 +6,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
 
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileSystemView;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -47,5 +50,18 @@ public class JSON {
           catch (ParseException e) { System.out.println("ParseException: "+e.getUnexpectedObject()); }
         
         return null;
+    }
+
+    public static HashSet<Vector2Int> loadJSON() {
+        JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+        chooser.setDialogTitle("Load Schematic");
+        int r = chooser.showDialog(chooser, "Open");
+
+        if (r == JFileChooser.APPROVE_OPTION)
+            return JSONRead(chooser.getSelectedFile().getAbsolutePath());
+        else {
+            System.out.println("The user cancelled the task");
+            return null;
+        }
     }
 }
