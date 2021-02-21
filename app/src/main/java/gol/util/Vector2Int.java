@@ -15,7 +15,17 @@ public class Vector2Int {
         y = xy;
     }
 
-    // TODO: add asString constructor
+    public Vector2Int(String asString) {
+        String[] coords = asString.replaceAll("\\)", "").replaceAll("\\(", "").replaceAll(" ", "").split(",");
+        try {
+            x = Integer.parseInt(coords[0]);
+            y = Integer.parseInt(coords[1]);
+        } catch (NullPointerException e) {
+            System.out.println("Incorrect string given");
+            x = 0;
+            y = 0;
+        }
+    }
 
     public void setX(int x) {
         this.x = x;
@@ -96,6 +106,10 @@ public class Vector2Int {
         hash = hash * 31 + x;
         hash = hash * 31 + y;
         return hash;
+    }
+
+    public String JSONtoString() {
+        return x+", "+y;
     }
 
     public String toString() {

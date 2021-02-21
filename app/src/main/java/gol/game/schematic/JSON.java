@@ -1,9 +1,14 @@
 package gol.game.schematic;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
+
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import gol.util.Vector2Int;
 
@@ -13,7 +18,7 @@ public class JSON {
 
         int index = 0;
         for (Vector2Int i : data)
-            json.put(index++, i);
+            json.put(index++, i.JSONtoString());
         
         try {
             FileWriter file = new FileWriter(filePath);
@@ -22,5 +27,25 @@ public class JSON {
         } catch (IOException e) {
             System.out.println("Invalid path given!");
         }
+    }
+
+    public static HashSet<Vector2Int> JSONRead(String filePath) {
+        JSONParser parser = new JSONParser();
+
+        try (FileReader reader = new FileReader(filePath)) {
+            Object obj = parser.parse(reader);
+            JSONObject jsonOut = (JSONObject) obj;
+            HashSet<String> temp = new HashSet<String>(jsonOut.values());
+            HashSet<Vector2Int> output = new HashSet<Vector2Int>();
+            for (String i : temp)
+                output.add(new Vector2Int(i));
+
+            return output;
+
+        } catch (FileNotFoundException e) { System.out.println("File not found"); }
+          catch (IOException e) { System.out.println("IOException"); }
+          catch (ParseException e) { System.out.println("ParseException: "+e.getUnexpectedObject()); }
+        
+        return null;
     }
 }

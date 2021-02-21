@@ -15,6 +15,18 @@ public class Vector2 {
         y = xy;
     }
 
+    public Vector2(String asString) {
+        String[] coords = asString.replaceAll("\\)", "").replaceAll("\\(", "").replaceAll(" ", "").split(",");
+        try {
+            x = Double.parseDouble(coords[0]);
+            y = Double.parseDouble(coords[1]);
+        } catch (NullPointerException e) {
+            System.out.println("Incorrect string given");
+            x = 0;
+            y = 0;
+        }
+    }
+
     public void setX(double x) {
         this.x = x;
     }
