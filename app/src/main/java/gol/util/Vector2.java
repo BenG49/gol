@@ -1,5 +1,7 @@
 package gol.util;
 
+import java.util.List;
+
 import com.stuypulse.stuylib.math.Angle;
 
 public class Vector2 {
@@ -74,6 +76,38 @@ public class Vector2 {
 
     public Vector2 floorToInterval(double interval) {
         return new Vector2(this.x - this.x%interval, this.y - this.y % interval);
+    }
+
+    public static Vector2 min(Vector2 a, Vector2 b) {
+        return (a.x <= b.x && a.y <= b.y) ? a : b;
+    }
+
+    public static Vector2 max(Vector2 a, Vector2 b) {
+        return (a.x >= b.x && a.y >= b.y) ? a : b;
+    }
+
+    public static Vector2 min(List<Vector2> data) {
+        if (data.size() == 0)
+            return null;
+        
+        Vector2 min = data.get(0);
+        for (Vector2 i : data)
+            if (Vector2.min(min, i).equals(i))
+                min = i;
+        
+        return min;
+    }
+
+    public static Vector2 max(List<Vector2> data) {
+        if (data.size() == 0)
+            return null;
+        
+        Vector2 max = data.get(0);
+        for (Vector2 i : data)
+            if (Vector2.max(max, i).equals(i))
+                max = i;
+        
+        return max;
     }
 
     public boolean equals(Object a) {

@@ -7,22 +7,19 @@ import java.io.IOException;
 import java.util.HashSet;
 
 import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import gol.util.Vector2Int;
-
 public class JSON {
-    public static void JSONWrite(HashSet<Vector2Int> data, String filePath) {
+    public static void JSONWrite(HashSet<String> linkedData, String filePath) {
         JSONObject json = new JSONObject();
 
         int index = 0;
-        for (Vector2Int i : data)
-            json.put(index++, i.JSONtoString());
+        for (String i : linkedData)
+            json.put(index++, i);
         
         try {
             FileWriter file = new FileWriter(filePath);
@@ -33,18 +30,13 @@ public class JSON {
         }
     }
 
-    public static HashSet<Vector2Int> JSONRead(String filePath) {
+    public static HashSet<String> JSONRead(String filePath) {
         JSONParser parser = new JSONParser();
 
         try (FileReader reader = new FileReader(filePath)) {
             Object obj = parser.parse(reader);
             JSONObject jsonOut = (JSONObject) obj;
-            HashSet<String> temp = new HashSet<String>(jsonOut.values());
-            HashSet<Vector2Int> output = new HashSet<Vector2Int>();
-            for (String i : temp)
-                output.add(new Vector2Int(i));
-
-            return output;
+            return new HashSet<String>(jsonOut.values());
 
         } catch (FileNotFoundException e) { System.out.println("File not found"); }
           catch (IOException e) { System.out.println("IOException"); }
@@ -53,7 +45,7 @@ public class JSON {
         return null;
     }
 
-    public static HashSet<Vector2Int> loadJSON() {
+    public static HashSet<String> loadJSON() {
         JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         chooser.setDialogTitle("Load");
         int r = chooser.showDialog(chooser, "Open");
@@ -66,7 +58,7 @@ public class JSON {
         }
     }
 
-    public static void saveJSON(HashSet<Vector2Int> data) {
+    public static void saveJSON(HashSet<String> linkedData) {
         JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         chooser.setDialogTitle("Save");
         int r = chooser.showOpenDialog(null);
@@ -79,7 +71,7 @@ public class JSON {
             if (!path.endsWith(extension))
                 path = path.split("\\.")[0]+extension;
 
-            JSONWrite(data, path);
+            JSONWrite(linkedData, path);
         } else
             System.out.println("The user cancelled the task");
     }

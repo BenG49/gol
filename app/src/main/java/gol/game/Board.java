@@ -19,6 +19,7 @@ import java.awt.event.ActionListener;
 
 import gol.display.shapes.*;
 import gol.display.shapes.Text.ScreenPos;
+import gol.game.schematic.JSON;
 import gol.game.schematic.Schematic;
 import gol.input.*;
 import gol.util.*;
@@ -38,7 +39,6 @@ public class Board extends InputDisplay {
 
     private BoardInput input;
     public GameAlg game;
-    private List<Schematic> tempSchematics;
 
     private static final int DEFAULT_WIDTH = 1000;
     private static final int OPTIMIZED_DRAW_INTERVAL = 10;
@@ -262,12 +262,8 @@ public class Board extends InputDisplay {
         if (choice != 0) {
             if (input.checkSavePrompt() == 1) {
                 Schematic temp = new Schematic(game.getIterator(), selectA, selectB);
-                try {
-                    tempSchematics.add(temp);
-                } catch (NullPointerException e) {
-                    tempSchematics = new ArrayList<Schematic>();
-                    tempSchematics.add(temp);
-                }
+
+                JSON.saveJSON(temp.getLinkedData());
             }
 
             promptingSave = false;

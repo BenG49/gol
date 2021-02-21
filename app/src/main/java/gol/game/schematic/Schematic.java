@@ -15,6 +15,7 @@ public class Schematic {
 
     HashSet<Vector2Int> cells;
     List<Schematic> schematics;
+    String path;
 
     // just used for multiple schematics
     Vector2Int origin;
@@ -55,23 +56,34 @@ public class Schematic {
     };
 
     public Schematic(Iterator<Vector2Int> allCells, Vector2Int selA, Vector2Int selB) {
-        cells = new HashSet<Vector2Int>();
-
-        while (allCells.hasNext()) {
-            Vector2Int temp = allCells.next();
-            if (!temp.within(selA, selB))
-                continue;
-            
-            cells.add(temp);
-        }
+        this(constructor(allCells, selA, selB), new ArrayList<Schematic>(), Vector2Int.min(setToList(constructor(allCells, selA, selB))));
     }
-    public Schematic(HashSet<Vector2Int> cells, Vector2Int origin) {
+    public Schematic(HashSet<Vector2Int> cells, Vector2Int origin) { this(cells, new ArrayList<Schematic>(), origin); }
+    public Schematic(List<Schematic> schematics) { this(new HashSet<Vector2Int>(), schematics, new Vector2Int(0, 0)); }
+    public Schematic(HashSet<Vector2Int> cells, List<Schematic> schematics, Vector2Int origin) {
         this.cells = cells;
+        this.schematics = schematics;
         this.origin = origin;
     }
-    public Schematic(List<Schematic> schematics) {
-        this.schematics = schematics;
-        origin = new Vector2Int(0, 0);
+
+    private static HashSet<Vector2Int> constructor(Iterator<Vector2Int> allCells, Vector2Int selA, Vector2Int selB) {
+        HashSet<Vector2Int> temp = new HashSet<Vector2Int>();
+
+        while (allCells.hasNext()) {
+            Vector2Int pos = allCells.next();
+            if (!pos.within(selA, selB))
+                continue;
+            
+            temp.add(pos);
+        }
+
+        return temp;
+    }
+
+    private static List<Vector2Int> setToList(HashSet<Vector2Int> set) {
+        List<Vector2Int> temp = new ArrayList<Vector2Int>();
+        temp.addAll(set);
+        return temp;
     }
 
     public Vector2Int getOrigin() {
@@ -81,28 +93,47 @@ public class Schematic {
     public HashSet<Vector2Int> getData() {
         HashSet<Vector2Int> output = new HashSet<Vector2Int>();
 
-        try {
-            if (!origin.equals(new Vector2Int(0, 0))) {
-                Iterator<Vector2Int> iterator = cells.iterator();
-                while (iterator.hasNext())
-                    output.add(iterator.next().add(origin));
-            } else
-                output = cells;
-        } catch (NullPointerException e) {}
+        for (Vector2Int pos : cells)
+            output.add(pos.add(origin));
 
-        try {
-            for (Schematic i : schematics) {
-                HashSet<Vector2Int> temp = i.getData();
-                Vector2Int schemOrigin = i.getOrigin();
+        for (Schematic schem : schematics) {
+            HashSet<Vector2Int> temp = schem.getData();
+            Vector2Int schemOrigin = schem.getOrigin();
 
-                Iterator<Vector2Int> iterator = temp.iterator();
-
-                while (iterator.hasNext())
-                    output.add(iterator.next().add(schemOrigin));
-            }
-        } catch (NullPointerException e) {}
+            for (Vector2Int pos : temp)
+                output.add(pos.add(schemOrigin));
+        }
 
         return output;
+    }
+
+    public HashSet<String> getLinkedData() {
+        HashSet<String> output = new HashSet<String>();
+
+        for (Vector2Int pos : cells)
+            output.add(pos.add(origin).JSONtoString());
+        
+        for (Schematic schem : schematics) {
+            if (schem.getFilePath() != null)
+                output.add(schem.getFilePath());
+            else
+                for (String pos : schem.getLinkedData())
+                    output.add(pos);
+        }
+
+        return output;
+    }
+
+    public String getFilePath() {
+        try {
+            return path;
+        } catch(NullPointerException e) {
+            return null;
+        }
+    }
+
+    public void setFilePath(String path) {
+        this.path = path;
     }
 
     public static List<Vector2Int> rotate90(List<Vector2Int> in) {
