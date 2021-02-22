@@ -47,14 +47,15 @@ public class Board extends InputDisplay {
     private static final int OPTIMIZED_DRAW_INTERVAL = 10;
     private static final boolean USING_MENU = true;
 
+    public Board() {
+        this(new HashSet<Vector2Int>(), 24, new KeyBinding());
+    }
     public Board(HashSet<Vector2Int> aliveCells) {
-        this(aliveCells, 25, new KeyBinding());
+        this(aliveCells, 24, new KeyBinding());
     }
-
     public Board(Schematic schem) {
-        this(schem.getData(), 25, new KeyBinding());
+        this(schem.getData(), 24, new KeyBinding());
     }
-
     public Board(HashSet<Vector2Int> aliveCells, int cellScreenLen, KeyBinding binding) {
         super(DEFAULT_WIDTH, DEFAULT_WIDTH, Color.BLACK);
 
@@ -203,16 +204,15 @@ public class Board extends InputDisplay {
 
             Vector2Int drawPos = selectA.sub(screenPos).mul(cellLen).floor();
             Vector2 mouseScreenPos = new Vector2(getMousePos(USING_MENU).x * WIDTH, (1 - getMousePos(USING_MENU).y) * HEIGHT);
-            // TODO: make this account for zoom
-            Vector2Int size = mouseScreenPos.add(screenPos).sub(drawPos).ceil().floorToInterval(cellLen).add(cellLen);
+            Vector2Int size = mouseScreenPos.add(screenPos.div(cellLen)).sub(drawPos).ceil().floorToInterval(cellLen);
 
             if (size.x < 0) {
                 drawPos.setX(drawPos.x + size.x - cellLen);
-                size.setX(Math.abs(size.x));
+                size.setX(Math.abs(size.x)+input.getCellScreenLen()*2);
             }
             if (size.y < 0) {
                 drawPos.setY(drawPos.y + size.y - cellLen);
-                size.setY(Math.abs(size.y));
+                size.setY(Math.abs(size.y)+input.getCellScreenLen()*2);
             }
 
             shapes.add(new FillRect(drawPos, size, 0, new Color(1f, 1f, 1f, 0.5f)));
@@ -251,11 +251,12 @@ public class Board extends InputDisplay {
         shapes.add(new FillRect(drawPos, CELL_WIDTH, 0, color));
     }
 
-    // TODO: optimize by having either cache or checking if mouse has moved
-    // TODO: fix zoom not working with this
+    // TODO: optimize by having either cache or checking if zoom has changed
     public Vector2Int getMouseGamePos() {
-        return new Vector2(getMousePos(USING_MENU).x, 1 - getMousePos(USING_MENU).y).mul(HEIGHT / input.getCellScreenLen())
-                .add(input.getScreenPos()).floor();
+        double cellLen = input.getCellScreenLen();
+        Vector2 mouse = getMousePos(USING_MENU);
+
+        return new Vector2(mouse.x, 1-mouse.y).mul(HEIGHT/cellLen).add(input.getScreenPos()).floor();
     }
 
     private void schemSavePrompt(List<Shape> shapes) {
@@ -330,7 +331,6 @@ public class Board extends InputDisplay {
             load.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // TODO: make it so that RectTypes of schematics are saved and linked
                     tempSchem = JSON.loadSchem();
                     placeSchem = true;
                 }

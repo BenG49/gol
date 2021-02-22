@@ -44,7 +44,7 @@ public class InputDisplay extends Display {
     
     public Vector2 getMousePos(boolean menu) {
         if (menu)
-            return new Vector2(mouse.getMouseX(), mouse.getMouseY()*(1f/0.975f));
+            return new Vector2(mouse.getMouseX(), mouse.getMouseY()*(1f/0.973f));
         else
             return new Vector2(mouse.getMouseX(), mouse.getMouseY());
     }
