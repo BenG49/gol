@@ -1,16 +1,17 @@
 package gol.game.schematic;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-
-import com.stuypulse.stuylib.math.Angle;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.awt.Color;
+
+import com.stuypulse.stuylib.math.Angle;
 
 import gol.util.Vector2Int;
+import gol.display.shapes.Rect;
 
 public class Schematic {
 
@@ -23,19 +24,19 @@ public class Schematic {
     private Vector2Int origin;
 
     public enum Pattern {
-        BLINKER (Arrays.asList(new Vector2Int[] {
+        BLINKER (Arrays.asList(
             new Vector2Int(0, -1),
             new Vector2Int(0, 0),
             new Vector2Int(0, 1)
-        })),
-        GLIDER (Arrays.asList(new Vector2Int[] {
+        )),
+        GLIDER (Arrays.asList(
             new Vector2Int(0, 0),
             new Vector2Int(0, 1),
             new Vector2Int(0, 2),
             new Vector2Int(1, 2),
             new Vector2Int(2, 1)
-        })),
-        BEACON (Arrays.asList(new Vector2Int[] {
+        )),
+        BEACON (Arrays.asList(
             new Vector2Int(0, 2),
             new Vector2Int(0, 3),
             new Vector2Int(1, 2),
@@ -44,7 +45,7 @@ public class Schematic {
             new Vector2Int(2, 1),
             new Vector2Int(3, 0),
             new Vector2Int(3, 1)
-        }));
+        ));
 
         List<Vector2Int> cells;
 
@@ -121,6 +122,12 @@ public class Schematic {
         }
     }
 
+    public Rect getBoundingBox(int border, Color color, int cellLen, Vector2Int offset) {
+        Vector2Int min = Vector2Int.overallMin(cells);
+        Vector2Int max = Vector2Int.overallMax(cells);
+        return new Rect(offset.add(min).mul(cellLen), max.add(min).abs().add(1).mul(cellLen), border, color);
+    }
+
     public void setFilePath(String path) {
         this.path = path;
         filePathLUT.put(path, this);
@@ -130,9 +137,19 @@ public class Schematic {
         List<Vector2Int> out = new ArrayList<Vector2Int>();
 
         for (Vector2Int i : in)
-            out.add(i.rotate(Angle.k90deg, new Vector2Int(0, 0)));
+            out.add(i.rotate(Angle.k90deg, new Vector2Int(0)));
 
         return out;
+    }
+
+    public static void rotate90(Schematic in) {
+        HashSet<Vector2Int> data = in.getData();
+        HashSet<Vector2Int> set = new HashSet<Vector2Int>();
+
+        for (Vector2Int pos : data)
+            set.add(pos.rotate(Angle.k90deg, new Vector2Int(0)));
+        
+        in.cells = set;
     }
 
     public static HashSet<Vector2Int> getPattern(Pattern pattern, int rotation) {

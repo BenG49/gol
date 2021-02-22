@@ -93,6 +93,7 @@ public class Board extends InputDisplay {
             } else if (placeSchem) {
                 drawBoard(shapes);
                 placeSchemDraw(shapes, tempSchem);
+                input.checkKeysOptimized();
             } else {
                 if (input.getStepAuto()) {
                     if (!betweenSteps) {
@@ -166,10 +167,10 @@ public class Board extends InputDisplay {
     }
 
     public void drawBoardOptimized(List<Shape> shapes) {
-        final int CELL_WIDTH = (int) (input.getCellScreenLen() * 0.95);
+        final int CELL_WIDTH = (int) (input.getCellLen() * 0.95);
 
-        Vector2 max = input.getScreenPos().add(new Vector2(input.getScreenPos().x + WIDTH * input.getCellScreenLen(),
-                input.getScreenPos().y + HEIGHT * input.getCellScreenLen()));
+        Vector2 max = input.getScreenPos().add(new Vector2(input.getScreenPos().x + WIDTH * input.getCellLen(),
+                input.getScreenPos().y + HEIGHT * input.getCellLen()));
         Iterator<Vector2Int> iterator = game.getIterator();
 
         while (iterator.hasNext()) {
@@ -199,7 +200,7 @@ public class Board extends InputDisplay {
 
         // selection area
         if (input.getSelectMode() == 1 && getButtonPressed(1)) {
-            int cellLen = input.getCellScreenLen();
+            int cellLen = input.getCellLen();
             Vector2 screenPos = input.getScreenPos();
 
             Vector2Int drawPos = selectA.sub(screenPos).mul(cellLen).floor();
@@ -208,11 +209,11 @@ public class Board extends InputDisplay {
 
             if (size.x < 0) {
                 drawPos.setX(drawPos.x + size.x - cellLen);
-                size.setX(Math.abs(size.x)+input.getCellScreenLen()*2);
+                size.setX(Math.abs(size.x)+input.getCellLen()*2);
             }
             if (size.y < 0) {
                 drawPos.setY(drawPos.y + size.y - cellLen);
-                size.setY(Math.abs(size.y)+input.getCellScreenLen()*2);
+                size.setY(Math.abs(size.y)+input.getCellLen()*2);
             }
 
             shapes.add(new FillRect(drawPos, size, 0, new Color(1f, 1f, 1f, 0.5f)));
@@ -224,7 +225,7 @@ public class Board extends InputDisplay {
         // bottom left
         shapes.add(new Text(
                 new String[] {
-                        new Vector2Int(WIDTH / input.getCellScreenLen() / 2, HEIGHT / input.getCellScreenLen() / 2)
+                        new Vector2Int(WIDTH / input.getCellLen() / 2, HEIGHT / input.getCellLen() / 2)
                                 .add(input.getScreenPos().floor()).toString(),
                         "Steps: " + game.getStepCount() },
                 ScreenPos.BOT_LEFT, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
@@ -234,9 +235,9 @@ public class Board extends InputDisplay {
     }
 
     private void projectToScreen(Vector2Int pos, List<Shape> shapes, int highlight) {
-        final int CELL_WIDTH = (int) (input.getCellScreenLen() * 0.95);
+        final int CELL_WIDTH = (int) (input.getCellLen() * 0.95);
 
-        Vector2Int drawPos = pos.sub(input.getScreenPos()).mul(input.getCellScreenLen()).round();
+        Vector2Int drawPos = pos.sub(input.getScreenPos().floor()).mul(input.getCellLen());
         Color color;
 
         if (highlight == 1)
@@ -252,8 +253,9 @@ public class Board extends InputDisplay {
     }
 
     // TODO: optimize by having either cache or checking if zoom has changed
+    // something weird with this rounding error
     public Vector2Int getMouseGamePos() {
-        double cellLen = input.getCellScreenLen();
+        double cellLen = input.getCellLen();
         Vector2 mouse = getMousePos(USING_MENU);
 
         return new Vector2(mouse.x, 1-mouse.y).mul(HEIGHT/cellLen).add(input.getScreenPos()).floor();
@@ -291,19 +293,31 @@ public class Board extends InputDisplay {
     }
 
     public void placeSchemDraw(List<Shape> shapes, Schematic draw) {
-        final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);
+        final int CELL_WIDTH = (int) (input.getCellLen()*0.95);
         final Vector2 max = input.getScreenPos().add(new Vector2(
-            input.getScreenPos().x + WIDTH * input.getCellScreenLen(),
-            input.getScreenPos().y + HEIGHT * input.getCellScreenLen()));
+            input.getScreenPos().x + WIDTH * input.getCellLen(),
+            input.getScreenPos().y + HEIGHT * input.getCellLen()));
 
-        Vector2Int offset = getMouseGamePos().sub(input.getScreenPos().floor()).sub(WIDTH/2/input.getCellScreenLen());
+        Vector2Int offset = getMouseGamePos();
         for (Vector2Int pos : draw.getData()) {
-            pos = pos.add(offset);
-            if (pos.x + CELL_WIDTH < input.getScreenPos().x || pos.x > max.x || pos.y + CELL_WIDTH < input.getScreenPos().y || pos.y > max.y)
+            Vector2Int temp = offset.add(pos);;
+            if (temp.x + CELL_WIDTH < input.getScreenPos().x || temp.x > max.x || temp.y + CELL_WIDTH < input.getScreenPos().y || temp.y > max.y)
                 continue;
 
-            projectToScreen(pos, shapes, 3);
+            projectToScreen(temp, shapes, 3);
         }
+
+        // bounding box
+        // TODO: fix rounding error with screenPos and getMouseGamePos
+        shapes.add(draw.getBoundingBox(2, Color.WHITE, input.getCellLen(), offset.sub(input.getScreenPos().floor())));
+
+        // rotate schem
+        if (input.placeSchemRotateCheck())
+            Schematic.rotate90(tempSchem);
+
+        // check for cancel key
+        if (input.checkSavePrompt() == -1)
+            placeSchem = false;
 
         if (getButtonPressed(1)) {
             for (Vector2Int pos : draw.getData())

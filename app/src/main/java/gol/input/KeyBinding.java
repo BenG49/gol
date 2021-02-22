@@ -7,14 +7,15 @@ public class KeyBinding {
         MAIN(new String[] {
             "Space",
             "Enter",
-            "e", "r",
+            "Down", "Up",
             "w", "a", "s", "d",
-            "Up", "Down",
+            "Right", "Left",
             "f",
             "c",
             "F1",
             "o", "p", 
             "Ctrl z",
+            "r",
             "Ctrl 1", "Ctrl 2"
         });
 
@@ -99,11 +100,15 @@ public class KeyBinding {
         return binding[15];
     }
 
-    public String mode1() {
+    public String rotate() {
         return binding[16];
     }
 
-    public String mode2() {
+    public String mode1() {
         return binding[17];
+    }
+
+    public String mode2() {
+        return binding[18];
     }
 }

@@ -133,6 +133,10 @@ public class Vector2Int {
         return max;
     }
 
+    public Vector2Int abs() {
+        return new Vector2Int(Math.abs(this.x), Math.abs(this.y));
+    }
+
     public static Vector2Int overallMin(HashSet<Vector2Int> data) {
         Vector2Int min = new Vector2Int(Integer.MAX_VALUE);
 

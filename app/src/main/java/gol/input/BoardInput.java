@@ -151,10 +151,11 @@ public class BoardInput {
     }
 
     public boolean checkKeybindPrompt() {
-        if (b.hasKey(keyBind.cancelKey()))
-            return true;
+        return b.hasKey(keyBind.cancelKey());
+    }
 
-        return false;
+    public boolean placeSchemRotateCheck() {
+        return keyCanBePressed(keyBind.rotate());
     }
 
     private boolean keyCanBePressed(String key) {
@@ -247,7 +248,7 @@ public class BoardInput {
         return screenPos;
     }
 
-    public int getCellScreenLen() {
+    public int getCellLen() {
         return cellScreenLen;
     }
     
