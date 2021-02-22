@@ -14,7 +14,7 @@ public class KeyBinding {
             "c",
             "F1",
             "o", "p", 
-            "Ctrl z",
+            "Ctrl z", "Ctrl r",
             "r", "Delete",
             "Ctrl 1", "Ctrl 2"
         });
@@ -96,23 +96,27 @@ public class KeyBinding {
         return binding[14];
     }
 
-    public String reset() {
+    public String undo() {
         return binding[15];
     }
 
-    public String rotate() {
+    public String reset() {
         return binding[16];
     }
 
-    public String delete() {
+    public String rotate() {
         return binding[17];
     }
 
-    public String mode1() {
+    public String delete() {
         return binding[18];
     }
 
-    public String mode2() {
+    public String mode1() {
         return binding[19];
+    }
+
+    public String mode2() {
+        return binding[20];
     }
 }

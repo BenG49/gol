@@ -87,8 +87,10 @@ public class BoardInput {
         if (keyCanBePressed(keyBind.toggleAutoKey()))
             stepAuto = !stepAuto;
         
-        if (!stepAuto && keyCanBePressed(keyBind.singleStepKey()))
+        if (!stepAuto && keyCanBePressed(keyBind.singleStepKey())) {
             b.game.step();
+            b.ctrlZClear();
+        }
 
         if (keyCanBePressed(keyBind.zoomOut()))
             zoom(false);
@@ -113,6 +115,9 @@ public class BoardInput {
 
         if (keyCanBePressed(keyBind.toggleOptimized()))
             runOptimized = !runOptimized;
+
+        if (keyCanBePressed(keyBind.undo()))
+            b.undo();
 
     }
 
@@ -218,7 +223,8 @@ public class BoardInput {
                 keyBind.clear()+                            ":",
                 keyBind.toggleOptimized()+                  ":",
                 keyBind.mode1()+","+keyBind.mode2()+        ":",
-                keyBind.reset()+                            ":"
+                keyBind.reset()+                            ":",
+                keyBind.undo()+                             ":"
             }, ScreenPos.TOP_RIGHT, new RectType(0, 0, CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
 
             new Text(new String[] {
@@ -231,7 +237,8 @@ public class BoardInput {
                 "clear the board",
                 "toggle optimized mode for running simulations fast",
                 "switch to selection mode 1 and 2",
-                "reset the sim back to step 0"
+                "reset the sim back to step 0",
+                "undo the last set of cells drawn",
             }, ScreenPos.TOP_LEFT, new RectType(CENTER_RATIO, 0, b.WIDTH-CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
 
             new Text("Press "+keyBind.cancelKey()+" to exit.", ScreenPos.BOT_CENTER, new RectType(0, BOTTOM_RATIO, b.WIDTH, b.HEIGHT-BOTTOM_RATIO), Color.WHITE, font)

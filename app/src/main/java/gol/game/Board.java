@@ -40,6 +40,9 @@ public class Board extends InputDisplay {
     private boolean placeSchem;
     private Schematic tempSchem;
 
+    private List<HashSet<Vector2Int>> ctrlZCells;
+    private int ctrlZIndex;
+
     private BoardInput input;
     public GameAlg game;
 
@@ -64,6 +67,7 @@ public class Board extends InputDisplay {
         game = new GameAlg(aliveCells);
         input = new BoardInput(this, binding, cellScreenLen);
         stepTimer = new Timer();
+        ctrlZCells = new ArrayList<HashSet<Vector2Int>>();
 
         betweenSteps = false;
         lastLeftMouse = false;
@@ -71,6 +75,7 @@ public class Board extends InputDisplay {
         selectA = new Vector2Int(0, 0);
         selectB = new Vector2Int(0, 0);
         promptingSave = false;
+        ctrlZIndex = 0;
     }
 
     public void run() {
@@ -98,6 +103,7 @@ public class Board extends InputDisplay {
                 if (input.getStepAuto()) {
                     if (!betweenSteps) {
                         game.step();
+                        ctrlZClear();
 
                         if (input.getStepTimeMillis() > 1) {
                             betweenSteps = true;
@@ -130,21 +136,30 @@ public class Board extends InputDisplay {
         // LEFT CLICK
         if (getButtonPressed(1)) {
             // just clicked
-            if (!lastLeftMouse)
-                if (selectMode == 1)
+            if (!lastLeftMouse) {
+                if (selectMode == 0)
+                    ctrlZCells.add(new HashSet<Vector2Int>());
+                else if (selectMode == 1) {
                     selectA = getMouseGamePos();
+                }
+            }
 
             Vector2Int mousePos = getMouseGamePos();
 
             // ADD CELL
-            if (selectMode == 0)
+            if (selectMode == 0) {
+                if (!game.hasCell(mousePos))
+                    ctrlZCells.get(ctrlZIndex).add(mousePos);
                 game.addCell(mousePos);
+            }
 
             lastLeftMouse = true;
         } else {
             // just released
             if (lastLeftMouse) {
-                if (selectMode == 1) {
+                if (selectMode == 0)
+                    ctrlZIndex++;
+                else if (selectMode == 1) {
                     selectB = getMouseGamePos();
                     promptingSave = true;
                 }
@@ -342,6 +357,21 @@ public class Board extends InputDisplay {
                 game.addCell(pos.add(offset));
             placeSchem = false;
         }
+    }
+
+    public void undo() {
+        if (ctrlZIndex > 0) {
+            for (Vector2Int pos : ctrlZCells.get(ctrlZIndex-1))
+                game.removeCell(pos);
+        
+            ctrlZCells.remove(ctrlZIndex-1);
+            ctrlZIndex--;
+        }
+    }
+    
+    public void ctrlZClear() {
+        ctrlZCells.clear();
+        ctrlZIndex = 0;
     }
 
     private void createMenu() {
