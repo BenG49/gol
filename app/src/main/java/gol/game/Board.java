@@ -34,8 +34,11 @@ public class Board extends InputDisplay {
     private boolean lastRightMouse;
     private Vector2Int selectA;
     private Vector2Int selectB;
+
     private boolean promptingSave;
     private boolean displayKeybinds;
+    private boolean placeSchem;
+    private Schematic tempSchem;
 
     private BoardInput input;
     public GameAlg game;
@@ -86,6 +89,9 @@ public class Board extends InputDisplay {
             } else if (displayKeybinds) {
                 drawBoard(shapes);
                 drawKeybindings(shapes);
+            } else if (placeSchem) {
+                drawBoard(shapes);
+                placeSchemDraw(shapes, tempSchem);
             } else {
                 if (input.getStepAuto()) {
                     if (!betweenSteps) {
@@ -168,11 +174,10 @@ public class Board extends InputDisplay {
         while (iterator.hasNext()) {
             Vector2Int pos = iterator.next();
 
-            if (pos.x + CELL_WIDTH < input.getScreenPos().x || pos.x > max.x
-                    || pos.y + CELL_WIDTH < input.getScreenPos().y || pos.y > max.y)
+            if (pos.x + CELL_WIDTH < input.getScreenPos().x || pos.x > max.x || pos.y + CELL_WIDTH < input.getScreenPos().y || pos.y > max.y)
                 continue;
 
-            projectToScreen(pos, shapes, false);
+            projectToScreen(pos, shapes, 0);
         }
 
         // pause indicator
@@ -189,7 +194,7 @@ public class Board extends InputDisplay {
         for (int y = -2; y < 3; y++)
             for (int x = -2; x < 3; x++)
                 if (x == 0 || y == 0)
-                    projectToScreen(new Vector2Int(x, y), shapes, true);
+                    projectToScreen(new Vector2Int(x, y), shapes, 1);
 
         // selection area
         if (input.getSelectMode() == 1 && getButtonPressed(1)) {
@@ -214,7 +219,7 @@ public class Board extends InputDisplay {
         }
         // mouse highlight
         else if (getMousePos(USING_MENU).x > 0 && getMousePos(USING_MENU).x < 1 && getMousePos(USING_MENU).y > 0 && getMousePos(USING_MENU).y < 1)
-            projectToScreen(getMouseGamePos(), shapes, true);
+            projectToScreen(getMouseGamePos(), shapes, 2);
 
         // bottom left
         shapes.add(new Text(
@@ -228,14 +233,18 @@ public class Board extends InputDisplay {
                 new Font("Cascadia Code", Font.PLAIN, 20)));
     }
 
-    private void projectToScreen(Vector2Int pos, List<Shape> shapes, boolean highlight) {
+    private void projectToScreen(Vector2Int pos, List<Shape> shapes, int highlight) {
         final int CELL_WIDTH = (int) (input.getCellScreenLen() * 0.95);
 
         Vector2Int drawPos = pos.sub(input.getScreenPos()).mul(input.getCellScreenLen()).round();
         Color color;
 
-        if (highlight)
+        if (highlight == 1)
             color = new Color(1f, 1f, 1f, 0.25f);
+        else if (highlight == 2)
+            color = new Color(1f, 1f, 1f, 0.5f);
+        else if (highlight == 3)
+            color = new Color(1f, 1f, 1f, 0.75f);
         else
             color = Color.WHITE;
 
@@ -263,7 +272,7 @@ public class Board extends InputDisplay {
             if (input.checkSavePrompt() == 1) {
                 Schematic temp = new Schematic(game.getIterator(), selectA, selectB);
 
-                JSON.saveJSON(temp.getLinkedData());
+                JSON.saveSchem(temp);
             }
 
             promptingSave = false;
@@ -280,6 +289,28 @@ public class Board extends InputDisplay {
             displayKeybinds = false;
     }
 
+    public void placeSchemDraw(List<Shape> shapes, Schematic draw) {
+        final int CELL_WIDTH = (int) (input.getCellScreenLen()*0.95);
+        final Vector2 max = input.getScreenPos().add(new Vector2(
+            input.getScreenPos().x + WIDTH * input.getCellScreenLen(),
+            input.getScreenPos().y + HEIGHT * input.getCellScreenLen()));
+
+        Vector2Int offset = getMouseGamePos().sub(input.getScreenPos().floor()).sub(WIDTH/2/input.getCellScreenLen());
+        for (Vector2Int pos : draw.getData()) {
+            pos = pos.add(offset);
+            if (pos.x + CELL_WIDTH < input.getScreenPos().x || pos.x > max.x || pos.y + CELL_WIDTH < input.getScreenPos().y || pos.y > max.y)
+                continue;
+
+            projectToScreen(pos, shapes, 3);
+        }
+
+        if (getButtonPressed(1)) {
+            for (Vector2Int pos : draw.getData())
+                game.addCell(pos.add(offset));
+            placeSchem = false;
+        }
+    }
+
     private void createMenu() {
         final JMenuBar menu = new JMenuBar();
 
@@ -288,20 +319,22 @@ public class Board extends InputDisplay {
             JMenuItem lmao = new JMenuItem("Lmao did you expect any file functionality");
         JMenu helpMenu = new JMenu("Help");
             JMenuItem keybinds = new JMenuItem("Keybindings");
-                keybinds.setActionCommand("displayKeybinds");
-                keybinds.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) { displayKeybinds = true; }
-                });
+            keybinds.setActionCommand("displayKeybinds");
+            keybinds.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) { displayKeybinds = true; }
+            });
         JMenu schem = new JMenu("Schematics");
             JMenuItem load = new JMenuItem("Load Schematic");
-                load.setActionCommand("load");
-                load.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        // TODO: add new selection mode where clicking places schem, mouse previews schem
-                    }
-                });
+            load.setActionCommand("load");
+            load.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // TODO: make it so that RectTypes of schematics are saved and linked
+                    tempSchem = JSON.loadSchem();
+                    placeSchem = true;
+                }
+            });
 
         fileMenu.add(lmao);
         helpMenu.add(keybinds);

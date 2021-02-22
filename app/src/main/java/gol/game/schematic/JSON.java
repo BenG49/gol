@@ -45,20 +45,27 @@ public class JSON {
         return null;
     }
 
-    public static HashSet<String> loadJSON() {
+    public static Schematic loadSchem() {
         JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         chooser.setDialogTitle("Load");
         int r = chooser.showDialog(chooser, "Open");
 
-        if (r == JFileChooser.APPROVE_OPTION)
-            return JSONRead(chooser.getSelectedFile().getAbsolutePath());
+        if (r == JFileChooser.APPROVE_OPTION) {
+            String path = chooser.getSelectedFile().getAbsolutePath();
+            if (Schematic.filePathLUT.containsKey(path))
+                return Schematic.filePathLUT.get(path);
+
+            Schematic output = Schematic.parseFile(JSONRead(path));
+            Schematic.filePathLUT.put(path, output);
+            return output;
+        }
         else {
             System.out.println("The user cancelled the task");
             return null;
         }
     }
 
-    public static void saveJSON(HashSet<String> linkedData) {
+    public static void saveSchem(Schematic schem) {
         JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
         chooser.setDialogTitle("Save");
         int r = chooser.showOpenDialog(null);
@@ -71,7 +78,7 @@ public class JSON {
             if (!path.endsWith(extension))
                 path = path.split("\\.")[0]+extension;
 
-            JSONWrite(linkedData, path);
+            JSONWrite(schem.getLinkedData(), path);
         } else
             System.out.println("The user cancelled the task");
     }

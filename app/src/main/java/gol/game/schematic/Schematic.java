@@ -8,17 +8,19 @@ import com.stuypulse.stuylib.math.Angle;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import gol.util.Vector2Int;
 
 public class Schematic {
 
-    HashSet<Vector2Int> cells;
-    List<Schematic> schematics;
-    String path;
+    public static HashMap<String, Schematic> filePathLUT = new HashMap<String, Schematic>();
+    private HashSet<Vector2Int> cells;
+    private List<Schematic> schematics;
+    private String path;
 
     // just used for multiple schematics
-    Vector2Int origin;
+    private Vector2Int origin;
 
     public enum Pattern {
         BLINKER (Arrays.asList(new Vector2Int[] {
@@ -55,51 +57,14 @@ public class Schematic {
         }
     };
 
-    public Schematic(Iterator<Vector2Int> allCells, Vector2Int selA, Vector2Int selB) {
-        this(constructor(allCells, selA, selB), new ArrayList<Schematic>(), getRectMin(allCells));
-    }
+    public Schematic(Iterator<Vector2Int> allCells, Vector2Int selA, Vector2Int selB) { this(Vector2Int.overallWithin(allCells, selA, selB)); }
     public Schematic(HashSet<Vector2Int> cells, Vector2Int origin) { this(cells, new ArrayList<Schematic>(), origin); }
     public Schematic(List<Schematic> schematics) { this(new HashSet<Vector2Int>(), schematics, new Vector2Int(0, 0)); }
+    public Schematic(HashSet<Vector2Int> cells) { this(cells, new ArrayList<Schematic>(), Vector2Int.overallMin(cells)); }
     public Schematic(HashSet<Vector2Int> cells, List<Schematic> schematics, Vector2Int origin) {
-        this.cells = cells;
+        this.cells = new HashSet<Vector2Int>(cells);
         this.schematics = schematics;
         this.origin = origin;
-    }
-
-    private static HashSet<Vector2Int> constructor(Iterator<Vector2Int> allCells, Vector2Int selA, Vector2Int selB) {
-        HashSet<Vector2Int> temp = new HashSet<Vector2Int>();
-
-        while (allCells.hasNext()) {
-            Vector2Int pos = allCells.next();
-            if (!pos.within(selA, selB))
-                continue;
-            
-            temp.add(pos);
-        }
-
-        return temp;
-    }
-
-    private static Vector2Int getRectMin(Iterator<Vector2Int> allCells) {
-        Vector2Int output = new Vector2Int(0);
-
-        int i = 0;
-        while (allCells.hasNext()) {
-            Vector2Int temp = allCells.next();
-
-            if (i == 0) {
-                output = temp;
-                i++;
-                continue;
-            }
-
-            if (temp.x < output.x)
-                output.setX(temp.x);
-            if (temp.y < output.y)
-                output.setY(temp.y);
-        }
-
-        return output;
     }
 
     public Vector2Int getOrigin() {
@@ -108,15 +73,20 @@ public class Schematic {
 
     public HashSet<Vector2Int> getData() {
         HashSet<Vector2Int> output = new HashSet<Vector2Int>();
+        
+        if (origin.equals(new Vector2Int(0)))
+            output = cells;
 
         for (Vector2Int pos : cells)
-            output.add(pos.add(origin));
+            output.add(pos.sub(origin));
+            
+        if (schematics.size() == 0)
+            return output;
 
         for (Schematic schem : schematics) {
-            HashSet<Vector2Int> temp = schem.getData();
             Vector2Int schemOrigin = schem.getOrigin();
 
-            for (Vector2Int pos : temp)
+            for (Vector2Int pos : schem.getData())
                 output.add(pos.add(schemOrigin));
         }
 
@@ -127,7 +97,10 @@ public class Schematic {
         HashSet<String> output = new HashSet<String>();
 
         for (Vector2Int pos : cells)
-            output.add(pos.add(origin).JSONtoString());
+            output.add(pos.sub(origin).JSONtoString());
+        
+        if (schematics.size() == 0)
+            return output;
         
         for (Schematic schem : schematics) {
             if (schem.getFilePath() != null)
@@ -150,6 +123,7 @@ public class Schematic {
 
     public void setFilePath(String path) {
         this.path = path;
+        filePathLUT.put(path, this);
     }
 
     public static List<Vector2Int> rotate90(List<Vector2Int> in) {
@@ -169,16 +143,23 @@ public class Schematic {
         return new HashSet<Vector2Int>(temp);
     }
 
-    public static HashSet<Vector2Int> parseFile(HashSet<String> contents) {
-        HashSet<Vector2Int> output = new HashSet<Vector2Int>();
-        for (String current : contents) {
-            if (current.contains(".json"))
-                for (Vector2Int pos : parseFile(JSON.JSONRead(current)))
-                    output.add(pos);
-            else
-                output.add(new Vector2Int(current));
+    public static Schematic parseFile(HashSet<String> contents) {
+        HashSet<Vector2Int> outputCells = new HashSet<Vector2Int>();
+        List<Schematic> outputSchems = new ArrayList<Schematic>();
+
+        for (String index : contents) {
+            if (index.contains(".json")) {
+                if (filePathLUT.containsKey(index))
+                    outputSchems.add(filePathLUT.get(index));
+                else
+                    outputSchems.add(parseFile(JSON.JSONRead(index)));
+            } else
+                outputCells.add(new Vector2Int(index));
         }
 
-        return output;
+        if (outputSchems.size() == 0)
+            return new Schematic(outputCells);
+
+        return new Schematic(outputCells, outputSchems, Vector2Int.overallMin(outputCells));
     }
 }

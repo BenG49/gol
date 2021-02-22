@@ -6,8 +6,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import javax.swing.plaf.basic.BasicSplitPaneUI.KeyboardDownRightHandler;
-
 import gol.display.shapes.Shape;
 import gol.display.shapes.Text;
 import gol.display.shapes.Text.ScreenPos;
@@ -72,7 +70,8 @@ public class BoardInput {
             keyBind.toggleAutoKey(),
             keyBind.mode1(),
             keyBind.mode2(),
-            keyBind.toggleOptimized()
+            keyBind.toggleOptimized(),
+            keyBind.reset()
         }));
         KEYS_ALWAYS_REPEAT = new HashSet<String>(Arrays.asList(new String[] {
             keyBind.up(),
@@ -138,6 +137,9 @@ public class BoardInput {
 
         if (keyCanBePressed(keyBind.mode2()))
             selectMode = 1;
+
+        if (keyCanBePressed(keyBind.reset()))
+            b.game.resetSteps();
     }
 
     public int checkSavePrompt() {
@@ -212,7 +214,8 @@ public class BoardInput {
                 keyBind.toOrigin()+                         ":",
                 keyBind.clear()+                            ":",
                 keyBind.toggleOptimized()+                  ":",
-                keyBind.mode1()+","+keyBind.mode2()+        ":"
+                keyBind.mode1()+","+keyBind.mode2()+        ":",
+                keyBind.reset()+                            ":"
             }, ScreenPos.TOP_RIGHT, new RectType(0, 0, CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
 
             new Text(new String[] {
@@ -224,7 +227,8 @@ public class BoardInput {
                 "jump back to the origin if you get lost",
                 "clear the board",
                 "toggle optimized mode for running simulations fast",
-                "switch to selection mode 1 and 2"
+                "switch to selection mode 1 and 2",
+                "reset the sim back to step 0"
             }, ScreenPos.TOP_LEFT, new RectType(CENTER_RATIO, 0, b.WIDTH-CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
 
             new Text("Press "+keyBind.cancelKey()+" to exit.", ScreenPos.BOT_CENTER, new RectType(0, BOTTOM_RATIO, b.WIDTH, b.HEIGHT-BOTTOM_RATIO), Color.WHITE, font)

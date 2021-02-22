@@ -1,5 +1,7 @@
 package gol.util;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import com.stuypulse.stuylib.math.Angle;
@@ -74,6 +76,23 @@ public class Vector2Int {
             && this.y >= Math.min(a.y, b.y) && this.y <= Math.max(a.y, b.y);
     }
 
+    public static HashSet<Vector2Int> overallWithin(Iterator<Vector2Int> data, Vector2Int a, Vector2Int b) {
+        HashSet<Vector2Int> temp = new HashSet<Vector2Int>();
+        while (data.hasNext())
+            temp.add(data.next());
+
+        return overallWithin(temp, a, b);
+    }
+    public static HashSet<Vector2Int> overallWithin(HashSet<Vector2Int> data, Vector2Int a, Vector2Int b) {
+        HashSet<Vector2Int> output = new HashSet<Vector2Int>();
+
+        for (Vector2Int pos : data)
+            if (pos.within(a, b))
+                output.add(pos);
+        
+        return output;
+    }
+
     public Vector2 toVector2() {
         return new Vector2(this.x, this.y);
     }
@@ -111,6 +130,32 @@ public class Vector2Int {
             if (Vector2Int.max(max, i).equals(i))
                 max = i;
         
+        return max;
+    }
+
+    public static Vector2Int overallMin(HashSet<Vector2Int> data) {
+        Vector2Int min = new Vector2Int(Integer.MAX_VALUE);
+
+        for (Vector2Int i : data) {
+            if (i.x < min.x)
+                min.setX(i.x);
+            if (i.y < min.y)
+                min.setY(i.y);
+        }
+
+        return min;
+    }
+
+    public static Vector2Int overallMax(HashSet<Vector2Int> data) {
+        Vector2Int max = new Vector2Int(Integer.MIN_VALUE);
+
+        for (Vector2Int i : data) {
+            if (i.x > max.x)
+                max.setX(i.x);
+            if (i.y > max.y)
+                max.setY(i.y);
+        }
+
         return max;
     }
 

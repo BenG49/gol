@@ -13,7 +13,8 @@ public class KeyBinding {
             "f",
             "c",
             "F1",
-            "o", "p",
+            "r", "e", 
+            "Ctrl z",
             "Ctrl 1", "Ctrl 2"
         });
 
@@ -94,11 +95,15 @@ public class KeyBinding {
         return binding[14];
     }
 
-    public String mode1() {
+    public String reset() {
         return binding[15];
     }
 
-    public String mode2() {
+    public String mode1() {
         return binding[16];
+    }
+
+    public String mode2() {
+        return binding[17];
     }
 }
