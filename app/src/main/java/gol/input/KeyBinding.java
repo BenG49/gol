@@ -15,7 +15,7 @@ public class KeyBinding {
             "F1",
             "o", "p", 
             "Ctrl z",
-            "r",
+            "r", "Delete",
             "Ctrl 1", "Ctrl 2"
         });
 
@@ -104,11 +104,15 @@ public class KeyBinding {
         return binding[16];
     }
 
-    public String mode1() {
+    public String delete() {
         return binding[17];
     }
 
-    public String mode2() {
+    public String mode1() {
         return binding[18];
+    }
+
+    public String mode2() {
+        return binding[19];
     }
 }

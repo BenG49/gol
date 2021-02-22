@@ -262,8 +262,8 @@ public class Board extends InputDisplay {
     }
 
     private void schemSavePrompt(List<Shape> shapes) {
-        shapes.add(new FillRect(0, 0, WIDTH, HEIGHT, 0, new Color(0f, 0f, 0f, 0.5f)));
-        shapes.add(new Text("Type " + input.keyBind.saveKey() + " to save, " + input.keyBind.cancelKey() + " to exit",
+        // shapes.add(new FillRect(0, 0, WIDTH, HEIGHT, 0, new Color(0f, 0f, 0f, 0.5f)));
+        shapes.add(new Text("Type "+input.keyBind.saveKey()+" to save, "+input.keyBind.cancelKey()+" to exit, "+input.keyBind.delete()+" to delete cells",
             ScreenPos.TOP_CENTER, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
 
         int choice = input.checkSavePrompt();
@@ -272,10 +272,22 @@ public class Board extends InputDisplay {
             promptingSave = false;
 
         if (choice != 0) {
-            if (input.checkSavePrompt() == 1) {
+            if (choice == 1) {
                 Schematic temp = new Schematic(game.getIterator(), selectA, selectB);
 
                 JSON.saveSchem(temp);
+            } else if (choice == 2) {
+                Iterator<Vector2Int> iterator = game.getIterator();
+                HashSet<Vector2Int> toRemove = new HashSet<Vector2Int>();
+
+                while(iterator.hasNext()) {
+                    Vector2Int pos = iterator.next();
+                    if (pos.within(selectA, selectB))
+                        toRemove.add(pos);
+                }
+
+                for (Vector2Int pos : toRemove)
+                    game.removeCell(pos);
             }
 
             promptingSave = false;
@@ -293,6 +305,12 @@ public class Board extends InputDisplay {
     }
 
     public void placeSchemDraw(List<Shape> shapes, Schematic draw) {
+        try { draw.getOrigin(); }
+        catch(NullPointerException e) {
+            placeSchem = false;
+            return;
+        }
+
         final int CELL_WIDTH = (int) (input.getCellLen()*0.95);
         final Vector2 max = input.getScreenPos().add(new Vector2(
             input.getScreenPos().x + WIDTH * input.getCellLen(),

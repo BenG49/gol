@@ -143,6 +143,8 @@ public class BoardInput {
     }
 
     public int checkSavePrompt() {
+        if (b.hasKey(keyBind.delete()))
+            return 2;
         if (b.hasKey(keyBind.saveKey()))
             return 1;
         if (b.hasKey(keyBind.cancelKey()))
