@@ -25,13 +25,17 @@ public class BoardInput {
     // multiplier for movementSpeed
     private final double MOVEMENT_MULT = 0.1;
     // slowest step time
-    private final int MAX_STEP_TIME = 750;
+    private final int MAX_STEP_TIME = 300;
     // interval to increase stepTime by
     private final int STEP_TIME_INTERVAL = (int)(MAX_STEP_TIME/10);
     // LUT for if key can be repeated
     private final HashSet<String> KEYS_DONT_REPEAT;
     // LUT for if key always repeats
     private final HashSet<String> KEYS_ALWAYS_REPEAT;
+    // zoom min
+    private final int ZOOM_MIN = 2;
+    // zoom max
+    private final int ZOOM_MAX = 500;
     
     // <--THESE VALUES ARE COMPLETELY DEPENDENT ON PROGRAM SPEED-->
     // amount of time to wait until spamming
@@ -201,8 +205,10 @@ public class BoardInput {
         else
             cellScreenLen = (int)Math.round(cellScreenLen/ZOOM_MULT);
 
-        if (cellScreenLen < 2)
-            cellScreenLen = 2;
+        if (cellScreenLen < ZOOM_MIN)
+            cellScreenLen = ZOOM_MIN;
+        else if (cellScreenLen > ZOOM_MAX)
+            cellScreenLen = ZOOM_MAX;
         else
             screenPos = screenCenter.sub(new Vector2d(b.WIDTH/cellScreenLen/2, b.HEIGHT/cellScreenLen/2));
     }
@@ -224,7 +230,8 @@ public class BoardInput {
                 keyBind.toggleOptimized()+                  ":",
                 keyBind.mode1()+","+keyBind.mode2()+        ":",
                 keyBind.reset()+                            ":",
-                keyBind.undo()+                             ":"
+                keyBind.undo()+                             ":",
+                "Esc:"
             }, ScreenPos.TOP_RIGHT, new RectType(0, 0, CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
 
             new Text(new String[] {
@@ -239,6 +246,7 @@ public class BoardInput {
                 "switch to selection mode 1 and 2",
                 "reset the sim back to step 0",
                 "undo the last set of cells drawn",
+                "close the simulation"
             }, ScreenPos.TOP_LEFT, new RectType(CENTER_RATIO, 0, b.WIDTH-CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
 
             new Text("Press "+keyBind.cancelKey()+" to exit.", ScreenPos.BOT_CENTER, new RectType(0, BOTTOM_RATIO, b.WIDTH, b.HEIGHT-BOTTOM_RATIO), Color.WHITE, font)

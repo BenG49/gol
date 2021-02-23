@@ -13,7 +13,7 @@ public class KeyBinding {
             "f",
             "c",
             "F1",
-            "o", "p", 
+            "e", "q", 
             "Ctrl z", "Ctrl r",
             "r", "Delete",
             "Ctrl 1", "Ctrl 2"

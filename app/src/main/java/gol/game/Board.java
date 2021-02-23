@@ -137,7 +137,7 @@ public class Board extends InputDisplay {
         if (getButtonPressed(1)) {
             // just clicked
             if (!lastLeftMouse) {
-                if (selectMode == 0)
+                if (selectMode == 0 && !input.getStepAuto())
                     ctrlZCells.add(new HashSet<Vector2i>());
                 else if (selectMode == 1) {
                     selectA = getMouseGamePos();
@@ -148,7 +148,7 @@ public class Board extends InputDisplay {
 
             // ADD CELL
             if (selectMode == 0) {
-                if (!game.hasCell(mousePos))
+                if (!game.hasCell(mousePos) && !input.getStepAuto())
                     ctrlZCells.get(ctrlZIndex).add(mousePos);
                 game.addCell(mousePos);
             }
@@ -157,7 +157,7 @@ public class Board extends InputDisplay {
         } else {
             // just released
             if (lastLeftMouse) {
-                if (selectMode == 0)
+                if (selectMode == 0 && !input.getStepAuto())
                     ctrlZIndex++;
                 else if (selectMode == 1) {
                     selectB = getMouseGamePos();
@@ -344,6 +344,9 @@ public class Board extends InputDisplay {
         // TODO: fix rounding error with screenPos and getMouseGamePos
         shapes.add(draw.getBoundingBox(2, Color.WHITE, input.getCellLen(), offset.sub(input.getScreenPos().floor())));
 
+        // cancel text
+        shapes.add(new Text("Press "+input.keyBind.cancelKey()+" to stop placement", ScreenPos.TOP_CENTER, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+
         // rotate schem
         if (input.placeSchemRotateCheck())
             Schematic.rotate90(tempSchem);
@@ -355,7 +358,6 @@ public class Board extends InputDisplay {
         if (getButtonPressed(1)) {
             for (Vector2i pos : draw.getData())
                 game.addCell(pos.add(offset));
-            placeSchem = false;
         }
     }
 
