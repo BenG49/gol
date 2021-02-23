@@ -185,10 +185,32 @@ public class Vector2Int {
     }
 
     public int hashCode() {
-        int hash = 23;
-        hash = hash * 31 + x;
-        hash = hash * 31 + y;
-        return hash;
+        // 15k steps 30 seconds
+        // long hash = 0xDEADBEEFDEADBEEFL;
+
+        // hash ^= ((long)x) << 32;
+        // hash ^= ((long)y) << 0;
+        // hash ^= hash << 13;
+        // hash ^= hash >> 7;
+        // hash ^= hash << 17;
+        // hash ^= ((long)y) << 32;
+        // hash ^= ((long)x) << 0;
+        // hash ^= hash << 13;
+        // hash ^= hash >> 7;
+        // hash ^= hash << 17;
+
+        // return (int)hash;
+
+        // 17k steps 30 seconds
+        int tX = x;
+        int tY = y;
+        tX ^= tX << 13;
+        tY ^= tY << 13;
+        tX ^= tX >> 17;
+        tY ^= tY >> 7;
+        tX ^= tX << 5;
+        tY ^= tY << 17;
+        return tX ^ tY;
     }
 
     public String JSONtoString() {

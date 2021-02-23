@@ -84,7 +84,7 @@ public class GameAlg {
 
     public void resetSteps() {
         stepCount = 0;
-        aliveCells = (HashSet<Vector2Int>) step0Cells.clone();
+        aliveCells = new HashSet<Vector2Int>(step0Cells);
     }
 
     public void addCell(Vector2Int pos) {
