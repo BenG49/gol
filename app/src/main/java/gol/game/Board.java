@@ -26,22 +26,32 @@ import gol.util.*;
 
 public class Board extends InputDisplay {
 
+    // step intervals
     private boolean betweenSteps;
     private Timer stepTimer;
     private TimerTask stepTimerTask;
 
+    // mouse flags
     private boolean lastLeftMouse;
     private boolean lastRightMouse;
+
+    // selection points
     private Vector2i selectA;
     private Vector2i selectB;
 
-    private boolean promptingSave;
+    // display modes
+    private boolean promptingSel;
     private boolean displayKeybinds;
     private boolean placeSchem;
     private Schematic tempSchem;
 
-    private List<HashSet<Vector2i>> ctrlZCells;
-    private int ctrlZIndex;
+    // undo
+    private List<HashSet<Vector2i>> undoCells;
+    private int undoIndex;
+
+    // mouse dragging sel points
+    private Vector2i mouseDragA;
+    private Vector2i mouseDragDelta;
 
     private List<Schematic> allSchematics;
     private BoardInput input;
@@ -69,16 +79,18 @@ public class Board extends InputDisplay {
         game = new GameAlg(aliveCells);
         input = new BoardInput(this, binding, cellScreenLen);
         stepTimer = new Timer();
-        ctrlZCells = new ArrayList<HashSet<Vector2i>>();
+        undoCells = new ArrayList<HashSet<Vector2i>>();
         allSchematics = new ArrayList<Schematic>();
 
         betweenSteps = false;
         lastLeftMouse = false;
         lastRightMouse = false;
-        selectA = new Vector2i(0, 0);
-        selectB = new Vector2i(0, 0);
-        promptingSave = false;
-        ctrlZIndex = 0;
+        selectA = Vector2i.ORIGIN;
+        selectB = Vector2i.ORIGIN;
+        mouseDragA = Vector2i.ORIGIN;
+        mouseDragDelta = Vector2i.ORIGIN;
+        promptingSel = false;
+        undoIndex = 0;
     }
 
     public void run() {
@@ -92,9 +104,9 @@ public class Board extends InputDisplay {
 
                 if (OPTIMIZED_RENDER && game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
                     drawBoardOptimized(shapes);
-            } else if (promptingSave) {
+            } else if (promptingSel) {
                 drawBoard(shapes);
-                schemSavePrompt(shapes);
+                selectionPrompt(shapes);
             } else if (displayKeybinds) {
                 drawBoard(shapes);
                 drawKeybindings(shapes);
@@ -139,35 +151,37 @@ public class Board extends InputDisplay {
 
     private void checkMouseClicks() {
         int selectMode = input.getSelectMode();
+        Vector2i mousePos = getMouseGamePos();
+
         // LEFT CLICK
         if (getButtonPressed(1)) {
             // just clicked
             if (!lastLeftMouse) {
-                if (selectMode == 0 && !input.getStepAuto())
-                    ctrlZCells.add(new HashSet<Vector2i>());
+                if (promptingSel)
+                    promptingSel = false;
+                else if (selectMode == 0 && !input.getStepAuto())
+                    undoCells.add(new HashSet<Vector2i>());
                 else if (selectMode == 1) {
-                    selectA = getMouseGamePos();
+                    selectA = mousePos;
                 }
-            }
 
-            Vector2i mousePos = getMouseGamePos();
+                lastLeftMouse = true;
+            }
 
             // ADD CELL
-            if (selectMode == 0) {
+            if (selectMode == 0 && !promptingSel) {
                 if (!game.hasCell(mousePos) && !input.getStepAuto())
-                    ctrlZCells.get(ctrlZIndex).add(mousePos);
+                    undoCells.get(undoIndex).add(mousePos);
                 game.addCell(mousePos);
             }
-
-            lastLeftMouse = true;
         } else {
             // just released
             if (lastLeftMouse) {
                 if (selectMode == 0 && !input.getStepAuto())
-                    ctrlZIndex++;
+                    undoIndex++;
                 else if (selectMode == 1) {
-                    selectB = getMouseGamePos();
-                    promptingSave = true;
+                    selectB = mousePos;
+                    promptingSel = true;
                 }
 
                 lastLeftMouse = false;
@@ -176,15 +190,25 @@ public class Board extends InputDisplay {
 
         // RIGHT CLICK
         if (getButtonPressed(3)) {
-            Vector2i mousePos = getMouseGamePos();
+            if (!lastRightMouse) {
+                if (promptingSel)
+                    mouseDragA = mousePos;
+                lastRightMouse = true;
+            }
 
+            if (promptingSel)
+                mouseDragDelta = mouseDragA.sub(mousePos);
             // REMOVE CELL
-            if (selectMode == 0 && game.hasCell(mousePos))
+            else if (selectMode == 0 && game.hasCell(mousePos))
                 game.removeCell(mousePos);
+        } else {
+            if (lastRightMouse) {
+                if (promptingSel)
+                    mouseDragA = null;
 
-            lastRightMouse = true;
-        } else if (lastRightMouse)
-            lastRightMouse = false;
+                lastRightMouse = false;
+            }
+        }
     }
 
     public void drawBoardOptimized(List<Shape> shapes) {
@@ -273,7 +297,6 @@ public class Board extends InputDisplay {
         shapes.add(new FillRect(drawPos, CELL_WIDTH, 0, color));
     }
 
-    // TODO: optimize by having either cache or checking if zoom has changed
     // something weird with this rounding error
     public Vector2i getMouseGamePos() {
         double cellLen = input.getCellLen();
@@ -282,15 +305,56 @@ public class Board extends InputDisplay {
         return new Vector2d(mouse.x, 1-mouse.y).mul(HEIGHT/cellLen).add(input.getScreenPos()).floor();
     }
 
-    private void schemSavePrompt(List<Shape> shapes) {
+    private void selectionPrompt(List<Shape> shapes) {
         // shapes.add(new FillRect(0, 0, WIDTH, HEIGHT, 0, new Color(0f, 0f, 0f, 0.5f)));
         shapes.add(new Text("Type "+input.keyBind.saveKey()+" to save, "+input.keyBind.cancelKey()+" to exit, "+input.keyBind.delete()+" to delete cells",
             ScreenPos.TOP_CENTER, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
 
         int choice = input.checkSavePrompt();
 
-        if (getButtonPressed(1) || getButtonPressed(3))
-            promptingSave = false;
+        checkMouseClicks();
+
+        if (!mouseDragDelta.equals(Vector2i.ORIGIN)) {
+            Iterator<Vector2i> iterator = game.getIterator();
+            List<Vector2i> toDraw = new ArrayList<Vector2i>();
+            
+            while (iterator.hasNext()) {
+                Vector2i pos = iterator.next();
+
+                if (pos.within(selectA, selectB))
+                    toDraw.add(pos.sub(mouseDragDelta));
+            }
+
+            for (Vector2i pos : toDraw)
+                projectToScreen(pos, shapes, 1);
+
+            // mouse has been released
+            try { mouseDragA.equals(Vector2i.ORIGIN); }
+            catch (NullPointerException e) {
+                Iterator<Vector2i> i = game.getIterator();
+                List<Vector2i> toRemove = new ArrayList<Vector2i>();
+                List<Vector2i> toReplace = new ArrayList<Vector2i>();
+            
+                while (i.hasNext()) {
+                    Vector2i pos = i.next();
+
+                    if (pos.within(selectA, selectB)) {
+                        toRemove.add(pos);
+                        toReplace.add(pos.sub(mouseDragDelta));
+                    }
+                }
+
+                for (Vector2i pos : toRemove)
+                    game.removeCell(pos);
+
+                for (Vector2i pos : toReplace)
+                    game.addCell(pos);
+
+                promptingSel = false;
+                mouseDragA = Vector2i.ORIGIN;
+                mouseDragDelta = Vector2i.ORIGIN;
+            }
+        }
 
         if (choice != 0) {
             if (choice == 1) {
@@ -299,7 +363,7 @@ public class Board extends InputDisplay {
                 JSON.saveSchem(temp);
             } else if (choice == 2) {
                 Iterator<Vector2i> iterator = game.getIterator();
-                HashSet<Vector2i> toRemove = new HashSet<Vector2i>();
+                List<Vector2i> toRemove = new ArrayList<Vector2i>();
 
                 while(iterator.hasNext()) {
                     Vector2i pos = iterator.next();
@@ -311,7 +375,7 @@ public class Board extends InputDisplay {
                     game.removeCell(pos);
             }
 
-            promptingSave = false;
+            promptingSel = false;
         }
     }
 
@@ -370,18 +434,18 @@ public class Board extends InputDisplay {
     }
 
     public void undo() {
-        if (ctrlZIndex > 0) {
-            for (Vector2i pos : ctrlZCells.get(ctrlZIndex-1))
+        if (undoIndex > 0) {
+            for (Vector2i pos : undoCells.get(undoIndex-1))
                 game.removeCell(pos);
         
-            ctrlZCells.remove(ctrlZIndex-1);
-            ctrlZIndex--;
+            undoCells.remove(undoIndex-1);
+            undoIndex--;
         }
     }
     
     public void ctrlZClear() {
-        ctrlZCells.clear();
-        ctrlZIndex = 0;
+        undoCells.clear();
+        undoIndex = 0;
     }
 
     public void clear() {

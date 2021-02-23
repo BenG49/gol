@@ -26,11 +26,11 @@ public class Schematic {
     public enum Pattern {
         BLINKER (Arrays.asList(
             new Vector2i(0, -1),
-            new Vector2i(0, 0),
+            Vector2i.ORIGIN,
             new Vector2i(0, 1)
         )),
         GLIDER (Arrays.asList(
-            new Vector2i(0, 0),
+            Vector2i.ORIGIN,
             new Vector2i(0, 1),
             new Vector2i(0, 2),
             new Vector2i(1, 2),
@@ -60,7 +60,7 @@ public class Schematic {
 
     public Schematic(Iterator<Vector2i> allCells, Vector2i selA, Vector2i selB) { this(Vector2i.overallWithin(allCells, selA, selB)); }
     public Schematic(HashSet<Vector2i> cells, Vector2i origin) { this(cells, new ArrayList<Schematic>(), origin); }
-    public Schematic(List<Schematic> schematics) { this(new HashSet<Vector2i>(), schematics, new Vector2i(0, 0)); }
+    public Schematic(List<Schematic> schematics) { this(new HashSet<Vector2i>(), schematics, Vector2i.ORIGIN); }
     public Schematic(HashSet<Vector2i> cells) { this(cells, new ArrayList<Schematic>(), Vector2i.overallMin(cells)); }
     public Schematic(HashSet<Vector2i> cells, List<Schematic> schematics, Vector2i origin) {
         this.cells = new HashSet<Vector2i>(cells);
@@ -75,7 +75,7 @@ public class Schematic {
     public HashSet<Vector2i> getData() {
         HashSet<Vector2i> output = new HashSet<Vector2i>();
         
-        if (origin.equals(new Vector2i(0)))
+        if (origin.equals(Vector2i.ORIGIN))
             output = cells;
 
         for (Vector2i pos : cells)
@@ -141,7 +141,7 @@ public class Schematic {
         List<Vector2i> out = new ArrayList<Vector2i>();
 
         for (Vector2i i : in)
-            out.add(i.rotate(Angle.k90deg, new Vector2i(0)));
+            out.add(i.rotate(Angle.k90deg, Vector2i.ORIGIN));
 
         return out;
     }
@@ -151,7 +151,7 @@ public class Schematic {
         HashSet<Vector2i> set = new HashSet<Vector2i>();
 
         for (Vector2i pos : data)
-            set.add(pos.rotate(Angle.k90deg, new Vector2i(0)));
+            set.add(pos.rotate(Angle.k90deg, Vector2i.ORIGIN));
         
         in.cells = set;
     }

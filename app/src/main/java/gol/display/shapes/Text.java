@@ -68,13 +68,13 @@ public class Text extends Shape {
         }
     };
     public Text(String text, ScreenPos preset, int widthHeight, Color c, Font font) {
-        this(text, preset, new RectType(new Vector2d(0), new Vector2d(widthHeight)), c, font);
+        this(text, preset, new RectType(Vector2d.ORIGIN, new Vector2d(widthHeight)), c, font);
     }
     public Text(String text, ScreenPos preset, RectType centerDimension, Color c, Font font) {
         this(new ArrayList<String>(Arrays.asList(text)), preset, centerDimension, c, font);
     }
     public Text(String[] text, ScreenPos preset, int widthHeight, Color c, Font font) {
-        this(Arrays.asList(text), preset, new RectType(new Vector2d(0), new Vector2d(widthHeight)), c, font);
+        this(Arrays.asList(text), preset, new RectType(Vector2d.ORIGIN, new Vector2d(widthHeight)), c, font);
     }
     public Text(String[] text, ScreenPos preset, RectType centerDimension, Color c, Font font) {
         this(Arrays.asList(text), preset, centerDimension, c, font);
