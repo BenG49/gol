@@ -11,7 +11,7 @@ import gol.display.shapes.Text;
 import gol.display.shapes.Text.ScreenPos;
 import gol.game.Board;
 import gol.util.RectType;
-import gol.util.Vector2;
+import gol.util.Vector2d;
 
 public class BoardInput {
     private Board b;
@@ -42,7 +42,7 @@ public class BoardInput {
     private int stepTimeMillis;
     private boolean stepAuto;
     private boolean run;
-    private Vector2 screenPos;
+    private Vector2d screenPos;
     private int cellScreenLen;
     private int selectMode;
     private boolean runOptimized;
@@ -50,9 +50,9 @@ public class BoardInput {
     private double movementSpeed = 50;
 
     public BoardInput(Board b, KeyBinding binding, int cellScreenLen) {
-        this(b, binding, new Vector2(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2), cellScreenLen);
+        this(b, binding, new Vector2d(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2), cellScreenLen);
     }
-    public BoardInput(Board b, KeyBinding binding, Vector2 screenPos, int cellScreenLen) {
+    public BoardInput(Board b, KeyBinding binding, Vector2d screenPos, int cellScreenLen) {
         this.b = b;
         this.screenPos = screenPos;
         this.cellScreenLen = cellScreenLen;
@@ -99,19 +99,19 @@ public class BoardInput {
             zoom(true);
 
         if (keyCanBePressed(keyBind.up()))
-            screenPos = screenPos.add(new Vector2(0, -movementSpeed));
+            screenPos = screenPos.add(new Vector2d(0, -movementSpeed));
 
         if (keyCanBePressed(keyBind.down()))
-            screenPos = screenPos.add(new Vector2(0, movementSpeed));
+            screenPos = screenPos.add(new Vector2d(0, movementSpeed));
 
         if (keyCanBePressed(keyBind.left()))
-            screenPos = screenPos.add(new Vector2(-movementSpeed, 0));
+            screenPos = screenPos.add(new Vector2d(-movementSpeed, 0));
 
         if (keyCanBePressed(keyBind.right()))
-            screenPos = screenPos.add(new Vector2(movementSpeed, 0));
+            screenPos = screenPos.add(new Vector2d(movementSpeed, 0));
 
         if (keyCanBePressed(keyBind.toOrigin()))
-            screenPos = new Vector2(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2);
+            screenPos = new Vector2d(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2);
 
         if (keyCanBePressed(keyBind.toggleOptimized()))
             runOptimized = !runOptimized;
@@ -194,7 +194,7 @@ public class BoardInput {
     }
 
     private void zoom(boolean zoomIn) {
-        final Vector2 screenCenter = screenPos.add(new Vector2(b.WIDTH/2/cellScreenLen, b.HEIGHT/2/cellScreenLen));
+        final Vector2d screenCenter = screenPos.add(new Vector2d(b.WIDTH/2/cellScreenLen, b.HEIGHT/2/cellScreenLen));
 
         if (zoomIn)
             cellScreenLen = (int)Math.round(cellScreenLen*ZOOM_MULT);
@@ -204,7 +204,7 @@ public class BoardInput {
         if (cellScreenLen < 2)
             cellScreenLen = 2;
         else
-            screenPos = screenCenter.sub(new Vector2(b.WIDTH/cellScreenLen/2, b.HEIGHT/cellScreenLen/2));
+            screenPos = screenCenter.sub(new Vector2d(b.WIDTH/cellScreenLen/2, b.HEIGHT/cellScreenLen/2));
     }
 
     // get methods
@@ -253,7 +253,7 @@ public class BoardInput {
         return run;
     }
 
-    public Vector2 getScreenPos() {
+    public Vector2d getScreenPos() {
         return screenPos;
     }
 

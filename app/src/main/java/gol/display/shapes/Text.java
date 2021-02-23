@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import gol.util.RectType;
-import gol.util.Vector2;
-import gol.util.Vector2Int;
+import gol.util.Vector2d;
+import gol.util.Vector2i;
 
 public class Text extends Shape {
     private final List<String> text;
@@ -35,9 +35,9 @@ public class Text extends Shape {
         }
 
         // thanks to https://stackoverflow.com/questions/27706197/how-can-i-center-graphics-drawstring-java
-        public Vector2Int getXY(RectType dim, FontMetrics metrics, String text) {
-            Vector2Int pos = dim.getPos().round();
-            Vector2Int size = dim.getSize().round();
+        public Vector2i getXY(RectType dim, FontMetrics metrics, String text) {
+            Vector2i pos = dim.getPos().round();
+            Vector2i size = dim.getSize().round();
 
             int outputX, outputY;
 
@@ -55,7 +55,7 @@ public class Text extends Shape {
             else
                 outputY = ((size.y-metrics.getHeight()) / 2) + metrics.getAscent();
 
-            return new Vector2Int(outputX+pos.x, outputY+pos.y);
+            return new Vector2i(outputX+pos.x, outputY+pos.y);
         }
 
         public int getBaseHeight(int y, FontMetrics metrics, int lineCount) {
@@ -68,13 +68,13 @@ public class Text extends Shape {
         }
     };
     public Text(String text, ScreenPos preset, int widthHeight, Color c, Font font) {
-        this(text, preset, new RectType(new Vector2(0), new Vector2(widthHeight)), c, font);
+        this(text, preset, new RectType(new Vector2d(0), new Vector2d(widthHeight)), c, font);
     }
     public Text(String text, ScreenPos preset, RectType centerDimension, Color c, Font font) {
         this(new ArrayList<String>(Arrays.asList(text)), preset, centerDimension, c, font);
     }
     public Text(String[] text, ScreenPos preset, int widthHeight, Color c, Font font) {
-        this(Arrays.asList(text), preset, new RectType(new Vector2(0), new Vector2(widthHeight)), c, font);
+        this(Arrays.asList(text), preset, new RectType(new Vector2d(0), new Vector2d(widthHeight)), c, font);
     }
     public Text(String[] text, ScreenPos preset, RectType centerDimension, Color c, Font font) {
         this(Arrays.asList(text), preset, centerDimension, c, font);
@@ -87,7 +87,7 @@ public class Text extends Shape {
         usePreset = true;
     }
 
-    public Text(String text, Vector2Int pos, Color c, Font font) {
+    public Text(String text, Vector2i pos, Color c, Font font) {
         this(text, pos.x, pos.y, c, font);
     }
     public Text(String text, int x, int y, Color c, Font font) {
@@ -122,7 +122,7 @@ public class Text extends Shape {
         else {
             FontMetrics metrics = g.getFontMetrics(font);
             for (int i = 0; i < text.size(); i++) {
-                Vector2Int pos = preset.getXY(centerDimension, metrics, text.get(i));
+                Vector2i pos = preset.getXY(centerDimension, metrics, text.get(i));
                 int baseHeight = preset.getBaseHeight(pos.y, metrics, text.size());
                 g.drawString(text.get(i), pos.x, baseHeight+i*(g.getFontMetrics(font).getAscent()+PADDING));
             }

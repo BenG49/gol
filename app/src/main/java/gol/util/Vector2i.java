@@ -6,20 +6,20 @@ import java.util.List;
 
 import com.stuypulse.stuylib.math.Angle;
 
-public class Vector2Int {
+public class Vector2i {
     public int x, y;
 
-    public Vector2Int(int x, int y) {
+    public Vector2i(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
-    public Vector2Int(int xy) {
+    public Vector2i(int xy) {
         x = xy;
         y = xy;
     }
 
-    public Vector2Int(String asString) {
+    public Vector2i(String asString) {
         String[] coords = asString.replaceAll("\\)", "").replaceAll("\\(", "").replaceAll(" ", "").split(",");
         try {
             x = Integer.parseInt(coords[0]);
@@ -39,108 +39,108 @@ public class Vector2Int {
         this.y = y;
     }
 
-    public Vector2Int add(Vector2Int a) {
-        return new Vector2Int(this.x+a.x, this.y+a.y);
+    public Vector2i add(Vector2i a) {
+        return new Vector2i(this.x+a.x, this.y+a.y);
     }
 
-    public Vector2Int sub(Vector2Int a) {
-        return new Vector2Int(this.x-a.x, this.y-a.y);
+    public Vector2i sub(Vector2i a) {
+        return new Vector2i(this.x-a.x, this.y-a.y);
     }
 
-    public Vector2 add(Vector2 a) {
-        return new Vector2(this.x+a.x, this.y+a.y);
+    public Vector2d add(Vector2d a) {
+        return new Vector2d(this.x+a.x, this.y+a.y);
     }
 
-    public Vector2 sub(Vector2 a) {
-        return new Vector2(this.x-a.x, this.y-a.y);
+    public Vector2d sub(Vector2d a) {
+        return new Vector2d(this.x-a.x, this.y-a.y);
     }
 
-    public Vector2Int add(int a) {
-        return new Vector2Int(this.x+a, this.y+a);
+    public Vector2i add(int a) {
+        return new Vector2i(this.x+a, this.y+a);
     }
 
-    public Vector2Int sub(int a) {
-        return new Vector2Int(this.x-a, this.y-a);
+    public Vector2i sub(int a) {
+        return new Vector2i(this.x-a, this.y-a);
     }
 
-    public Vector2Int mul(int a) {
-        return new Vector2Int(this.x*a, this.y*a);
+    public Vector2i mul(int a) {
+        return new Vector2i(this.x*a, this.y*a);
     }
 
-    public Vector2 div(int a) {
-        return new Vector2(this.x/a, this.y/a);
+    public Vector2d div(int a) {
+        return new Vector2d(this.x/a, this.y/a);
     }
 
-    public boolean within(Vector2Int a, Vector2Int b) {
+    public boolean within(Vector2i a, Vector2i b) {
         return this.x >= Math.min(a.x, b.x) && this.x <= Math.max(a.x, b.x)
             && this.y >= Math.min(a.y, b.y) && this.y <= Math.max(a.y, b.y);
     }
 
-    public static HashSet<Vector2Int> overallWithin(Iterator<Vector2Int> data, Vector2Int a, Vector2Int b) {
-        HashSet<Vector2Int> temp = new HashSet<Vector2Int>();
+    public static HashSet<Vector2i> overallWithin(Iterator<Vector2i> data, Vector2i a, Vector2i b) {
+        HashSet<Vector2i> temp = new HashSet<Vector2i>();
         while (data.hasNext())
             temp.add(data.next());
 
         return overallWithin(temp, a, b);
     }
-    public static HashSet<Vector2Int> overallWithin(HashSet<Vector2Int> data, Vector2Int a, Vector2Int b) {
-        HashSet<Vector2Int> output = new HashSet<Vector2Int>();
+    public static HashSet<Vector2i> overallWithin(HashSet<Vector2i> data, Vector2i a, Vector2i b) {
+        HashSet<Vector2i> output = new HashSet<Vector2i>();
 
-        for (Vector2Int pos : data)
+        for (Vector2i pos : data)
             if (pos.within(a, b))
                 output.add(pos);
         
         return output;
     }
 
-    public Vector2 toVector2() {
-        return new Vector2(this.x, this.y);
+    public Vector2d toVector2() {
+        return new Vector2d(this.x, this.y);
     }
 
-    public Vector2Int floorToInterval(int interval) {
-        return new Vector2Int(this.x - this.x%interval, this.y - this.y % interval);
+    public Vector2i floorToInterval(int interval) {
+        return new Vector2i(this.x - this.x%interval, this.y - this.y % interval);
     }
 
-    public static Vector2Int min(Vector2Int a, Vector2Int b) {
+    public static Vector2i min(Vector2i a, Vector2i b) {
         return (a.x <= b.x && a.y <= b.y) ? a : b;
     }
 
-    public static Vector2Int max(Vector2Int a, Vector2Int b) {
+    public static Vector2i max(Vector2i a, Vector2i b) {
         return (a.x >= b.x && a.y >= b.y) ? a : b;
     }
 
-    public static Vector2Int min(List<Vector2Int> data) {
+    public static Vector2i min(List<Vector2i> data) {
         if (data.size() == 0)
             return null;
         
-        Vector2Int min = data.get(0);
-        for (Vector2Int i : data)
-            if (Vector2Int.min(min, i).equals(i))
+        Vector2i min = data.get(0);
+        for (Vector2i i : data)
+            if (Vector2i.min(min, i).equals(i))
                 min = i;
         
         return min;
     }
 
-    public static Vector2Int max(List<Vector2Int> data) {
+    public static Vector2i max(List<Vector2i> data) {
         if (data.size() == 0)
             return null;
         
-        Vector2Int max = data.get(0);
-        for (Vector2Int i : data)
-            if (Vector2Int.max(max, i).equals(i))
+        Vector2i max = data.get(0);
+        for (Vector2i i : data)
+            if (Vector2i.max(max, i).equals(i))
                 max = i;
         
         return max;
     }
 
-    public Vector2Int abs() {
-        return new Vector2Int(Math.abs(this.x), Math.abs(this.y));
+    public Vector2i abs() {
+        return new Vector2i(Math.abs(this.x), Math.abs(this.y));
     }
 
-    public static Vector2Int overallMin(HashSet<Vector2Int> data) {
-        Vector2Int min = new Vector2Int(Integer.MAX_VALUE);
+    public static Vector2i overallMin(HashSet<Vector2i> data) {
+        Vector2i min = new Vector2i(Integer.MAX_VALUE);
 
-        for (Vector2Int i : data) {
+        for (Vector2i i : data) {
             if (i.x < min.x)
                 min.setX(i.x);
             if (i.y < min.y)
@@ -150,10 +150,10 @@ public class Vector2Int {
         return min;
     }
 
-    public static Vector2Int overallMax(HashSet<Vector2Int> data) {
-        Vector2Int max = new Vector2Int(Integer.MIN_VALUE);
+    public static Vector2i overallMax(HashSet<Vector2i> data) {
+        Vector2i max = new Vector2i(Integer.MIN_VALUE);
 
-        for (Vector2Int i : data) {
+        for (Vector2i i : data) {
             if (i.x > max.x)
                 max.setX(i.x);
             if (i.y > max.y)
@@ -164,19 +164,19 @@ public class Vector2Int {
     }
 
     public boolean equals(Object a) {
-        if (!(a instanceof Vector2Int))
+        if (!(a instanceof Vector2i))
             return false;
         if (a == this)
             return true;
 
-        Vector2Int temp = (Vector2Int) a;
+        Vector2i temp = (Vector2i) a;
         return this.x == temp.x && this.y == temp.y;
     }
 
     // thanks to Sam B from StuyLib for this method
-    public Vector2Int rotate(Angle angle, Vector2Int origin) {
-        Vector2Int point = this.sub(origin);
-        Vector2Int out = new Vector2Int(
+    public Vector2i rotate(Angle angle, Vector2i origin) {
+        Vector2i point = this.sub(origin);
+        Vector2i out = new Vector2i(
             (int)(point.x * angle.cos()) - (int)(point.y * angle.sin()),
             (int)(point.y * angle.cos()) + (int)(point.x * angle.sin())
         );

@@ -3,7 +3,7 @@ package gol.input;
 import java.awt.Color;
 
 import gol.display.Display;
-import gol.util.Vector2;
+import gol.util.Vector2d;
 
 import com.stuypulse.stuylib.util.chart.KeyTracker;
 import com.stuypulse.stuylib.util.chart.MouseTracker;
@@ -42,11 +42,11 @@ public class InputDisplay extends Display {
         return true;
     }
     
-    public Vector2 getMousePos(boolean menu) {
+    public Vector2d getMousePos(boolean menu) {
         if (menu)
-            return new Vector2(mouse.getMouseX(), mouse.getMouseY()*(1f/0.973f));
+            return new Vector2d(mouse.getMouseX(), mouse.getMouseY()*(1f/0.973f));
         else
-            return new Vector2(mouse.getMouseX(), mouse.getMouseY());
+            return new Vector2d(mouse.getMouseX(), mouse.getMouseY());
     }
 
     public boolean getButtonPressed(int button) {
