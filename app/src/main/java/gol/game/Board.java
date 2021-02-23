@@ -43,11 +43,13 @@ public class Board extends InputDisplay {
     private List<HashSet<Vector2i>> ctrlZCells;
     private int ctrlZIndex;
 
+    private List<Schematic> allSchematics;
     private BoardInput input;
     public GameAlg game;
 
     private static final int DEFAULT_WIDTH = 1000;
-    private static final int OPTIMIZED_DRAW_INTERVAL = 10;
+    private static final int OPTIMIZED_DRAW_INTERVAL = 50;
+    private static final boolean OPTIMIZED_RENDER = true;
     private static final boolean USING_MENU = true;
 
     public Board() {
@@ -68,6 +70,7 @@ public class Board extends InputDisplay {
         input = new BoardInput(this, binding, cellScreenLen);
         stepTimer = new Timer();
         ctrlZCells = new ArrayList<HashSet<Vector2i>>();
+        allSchematics = new ArrayList<Schematic>();
 
         betweenSteps = false;
         lastLeftMouse = false;
@@ -87,7 +90,7 @@ public class Board extends InputDisplay {
                 if (input.getStepAuto())
                     game.step();
 
-                if (game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
+                if (OPTIMIZED_RENDER && game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
                     drawBoardOptimized(shapes);
             } else if (promptingSave) {
                 drawBoard(shapes);
@@ -126,7 +129,10 @@ public class Board extends InputDisplay {
                 checkMouseClicks();
             }
 
-            if (!(input.getRunOptimized() && game.getStepCount() % 10 > 0))
+            if (input.getRunOptimized()) {
+                if (OPTIMIZED_RENDER && game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
+                    draw(shapes);
+            } else
                 draw(shapes);
         }
     }
@@ -341,7 +347,6 @@ public class Board extends InputDisplay {
         }
 
         // bounding box
-        // TODO: fix rounding error with screenPos and getMouseGamePos
         shapes.add(draw.getBoundingBox(2, Color.WHITE, input.getCellLen(), offset.sub(input.getScreenPos().floor())));
 
         // cancel text
@@ -358,6 +363,9 @@ public class Board extends InputDisplay {
         if (getButtonPressed(1)) {
             for (Vector2i pos : draw.getData())
                 game.addCell(pos.add(offset));
+
+            draw.setOrigin(offset);
+            allSchematics.add(draw);
         }
     }
 
@@ -374,6 +382,12 @@ public class Board extends InputDisplay {
     public void ctrlZClear() {
         ctrlZCells.clear();
         ctrlZIndex = 0;
+    }
+
+    public void clear() {
+        allSchematics.clear();
+        ctrlZClear();
+        game.clearCells();
     }
 
     private void createMenu() {

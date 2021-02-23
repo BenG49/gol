@@ -133,6 +133,10 @@ public class Schematic {
         filePathLUT.put(path, this);
     }
 
+    public void setOrigin(Vector2i origin) {
+        this.origin = origin;
+    }
+
     public static List<Vector2i> rotate90(List<Vector2i> in) {
         List<Vector2i> out = new ArrayList<Vector2i>();
 

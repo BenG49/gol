@@ -7,6 +7,8 @@ import java.util.List;
 import com.stuypulse.stuylib.math.Angle;
 
 public class Vector2d {
+    public static final Vector2d ORIGIN = new Vector2d(0);
+
     public double x, y;
 
     public Vector2d(double x, double y) {

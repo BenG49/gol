@@ -7,6 +7,8 @@ import java.util.List;
 import com.stuypulse.stuylib.math.Angle;
 
 public class Vector2i {
+    public static final Vector2i ORIGIN = new Vector2i(0);
+
     public int x, y;
 
     public Vector2i(int x, int y) {
@@ -198,10 +200,14 @@ public class Vector2i {
         // hash ^= hash << 13;
         // hash ^= hash >> 7;
         // hash ^= hash << 17;
-
         // return (int)hash;
 
+        // 10k steps 30 seconds
+        // 11k steps 30 seconds no rendering
+        // return (x) ^ (y << 16) ^ (y >>> 16);
+
         // 17k steps 30 seconds
+        // 17.7k steps 30 seconds no rendering
         int tX = x;
         int tY = y;
         tX ^= tX << 13;

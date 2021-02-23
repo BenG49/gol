@@ -139,7 +139,7 @@ public class BoardInput {
             stepTimeMillis += STEP_TIME_INTERVAL;
 
         if (keyCanBePressed(keyBind.clear()))
-            b.game.clearCells();
+            b.clear();
 
         if (keyCanBePressed(keyBind.mode1()))
             selectMode = 0;
