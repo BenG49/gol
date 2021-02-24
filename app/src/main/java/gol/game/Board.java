@@ -9,12 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 
 import gol.display.shapes.*;
 import gol.display.shapes.Text.ScreenPos;
@@ -30,7 +24,7 @@ public class Board extends InputDisplay {
     private TimerTask stepTimerTask;
 
     // mouse flags
-    private boolean lastLeftMouse;
+    protected boolean lastLeftMouse;
     private boolean lastRightMouse;
 
     // selection points
@@ -39,9 +33,9 @@ public class Board extends InputDisplay {
 
     // display modes
     private boolean promptingSel;
-    private boolean displayKeybinds;
-    private boolean placeSchem;
-    private Schematic tempSchem;
+    protected boolean displayKeybinds;
+    protected boolean placeSchem;
+    protected Schematic tempSchem;
 
     // undo
     private List<HashSet<Vector2i>> undoCells;
@@ -51,7 +45,7 @@ public class Board extends InputDisplay {
     private Vector2i mouseDragA;
     private Vector2i mouseDragDelta;
 
-    private HashMap<Schematic, Integer> allSchematics;
+    protected HashMap<Schematic, Integer> allSchematics;
     protected BoardInput input;
     public GameAlg game;
 
@@ -68,7 +62,7 @@ public class Board extends InputDisplay {
     public Board(HashSet<Vector2i> aliveCells, int cellScreenLen, KeyBinding binding) {
         super(DEFAULT_WIDTH, DEFAULT_WIDTH, Color.BLACK);
 
-        createMenu();
+        BoardUI.createMenu(this);
 
         game = new GameAlg(aliveCells);
         input = new BoardInput(this, binding, cellScreenLen);
@@ -103,9 +97,9 @@ public class Board extends InputDisplay {
                 if (promptingSel)
                     selectionPrompt(shapes);
                 else if (displayKeybinds)
-                    drawKeybindings(shapes);
+                    BoardUI.drawKeybindings(shapes, this);
                 else if (placeSchem) {
-                    placeSchemDraw(shapes, tempSchem);
+                    BoardUI.placeSchemDraw(shapes, tempSchem, this);
                     input.checkKeysOptimized();
                 } else {
                     if (input.getStepAuto() && !betweenSteps) {
@@ -287,85 +281,6 @@ public class Board extends InputDisplay {
         }
     }
 
-    public void drawKeybindings(List<Shape> shapes) {
-        shapes.add(new FillRect(0, 0, WIDTH, HEIGHT, 0, new Color(0f, 0f, 0f, 0.5f)));
-
-        for (Shape i : input.getKeyGuide())
-            shapes.add(i);
-        
-        if (input.checkKeybindPrompt())
-            displayKeybinds = false;
-    }
-
-    public void placeSchemDraw(List<Shape> shapes, Schematic draw) {
-        try { draw.getOrigin(); }
-        catch(NullPointerException e) {
-            placeSchem = false;
-            return;
-        }
-
-        final int cellLen = input.getCellLen();
-        final Vector2d screenPos = input.getScreenPos();
-        final int CELL_WIDTH = (int) (cellLen*0.95);
-        final Vector2d max = input.getScreenPos().add(WIDTH/input.getCellLen());
-
-        Vector2i offset = getMouseGamePos();
-        for (Vector2i pos : draw.getData()) {
-            Vector2i temp = offset.add(pos);;
-            if (temp.x + CELL_WIDTH < screenPos.x || temp.x > max.x || temp.y + CELL_WIDTH < screenPos.y || temp.y > max.y)
-                continue;
-
-            BoardUI.projectToScreen(shapes, temp, 3, this);
-        }
-
-        // bounding box
-        shapes.add(new Rect(draw.getBoundingBox(cellLen, offset.sub(screenPos).ceil()), 2, Color.WHITE));
-
-        // bounding box of every schematic
-        for (Schematic s : allSchematics.keySet()) {
-            // not on the step where the schematic was placed
-            if (allSchematics.get(s) != game.getStepCount())
-                continue;
-
-            RectType dim = s.getBoundingBox(cellLen, screenPos.mul(-1).ceil());
-            // not on screen
-            if (dim.getPos().x + dim.getSize().x < 0 || dim.getPos().x > WIDTH ||
-                dim.getPos().y + dim.getSize().y < 0 || dim.getPos().y > HEIGHT)
-                continue;
-
-            shapes.add(new Rect(dim, 2, Color.WHITE));
-        }
-
-        // cancel text
-        shapes.add(new Text("Press "+input.keyBind.cancelKey()+" to stop placement", ScreenPos.TOP_CENTER, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
-
-        // rotate schem
-        if (input.placeSchemRotateCheck())
-            Schematic.rotate90(tempSchem);
-
-        // check for cancel key
-        if (input.checkSavePrompt() == -1)
-            placeSchem = false;
-
-        if (getButtonPressed(1)) {
-            if (!lastLeftMouse) {
-                HashSet<Vector2i> temp = new HashSet<Vector2i>();
-                for (Vector2i pos : draw.getData()) {
-                    Vector2i newPos = pos.add(offset);
-                    game.addCell(newPos);
-                    temp.add(newPos);
-                }
-
-                Schematic toAddList = new Schematic(draw);
-                toAddList.setOrigin(Vector2i.overallMin(temp));
-                allSchematics.put(toAddList, game.getStepCount());
-            }
-
-            lastLeftMouse = true;
-        } else
-            lastLeftMouse = false;
-    }
-
     public void undo() {
         if (undoIndex > 0) {
             for (Vector2i pos : undoCells.get(undoIndex-1))
@@ -385,39 +300,5 @@ public class Board extends InputDisplay {
         allSchematics.clear();
         ctrlZClear();
         game.clearCells();
-    }
-
-    private void createMenu() {
-        final JMenuBar menu = new JMenuBar();
-
-        // menus
-        JMenu fileMenu = new JMenu("File");
-            JMenuItem lmao = new JMenuItem("Lmao did you expect any file functionality");
-        JMenu helpMenu = new JMenu("Help");
-            JMenuItem keybinds = new JMenuItem("Keybindings");
-            keybinds.setActionCommand("displayKeybinds");
-            keybinds.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) { displayKeybinds = true; }
-            });
-        JMenu schem = new JMenu("Schematics");
-            JMenuItem load = new JMenuItem("Load Schematic");
-            load.setActionCommand("load");
-            load.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    tempSchem = JSON.loadSchem();
-                    placeSchem = true;
-                }
-            });
-
-        fileMenu.add(lmao);
-        helpMenu.add(keybinds);
-        schem.add(load);
-
-        menu.add(fileMenu);
-        menu.add(helpMenu);
-        menu.add(schem);
-        setJMenuBar(menu);
     }
 }

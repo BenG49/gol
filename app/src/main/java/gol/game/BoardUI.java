@@ -1,13 +1,23 @@
 package gol.game;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import java.awt.Color;
 import java.awt.Font;
 
 import gol.display.shapes.*;
 import gol.display.shapes.Text.ScreenPos;
+import gol.game.schematic.JSON;
+import gol.game.schematic.Schematic;
+import gol.util.RectType;
 import gol.util.Vector2d;
 import gol.util.Vector2i;
 
@@ -57,15 +67,6 @@ public class BoardUI {
             Vector2d mouseScreenPos = new Vector2d(mousePos.x * board.WIDTH, (1 - mousePos.y) * board.HEIGHT);
             Vector2i size = mouseScreenPos.add(screenPos.div(cellLen)).sub(drawPos).ceil().floorToInterval(cellLen);
 
-            if (size.x < 0) {
-                drawPos.setX(drawPos.x + size.x - cellLen);
-                size.setX(Math.abs(size.x)+cellLen*2);
-            }
-            if (size.y < 0) {
-                drawPos.setY(drawPos.y + size.y - cellLen);
-                size.setY(Math.abs(size.y)+cellLen*2);
-            }
-
             shapes.add(new FillRect(drawPos, size, 0, new Color(1f, 1f, 1f, 0.5f)));
         }
         // mouse highlight
@@ -98,6 +99,120 @@ public class BoardUI {
             color = Color.WHITE;
 
         shapes.add(new FillRect(drawPos, drawWidth, 0, color));
+    }
+
+    public static void placeSchemDraw(List<Shape> shapes, Schematic draw, Board board) {
+        try { draw.getOrigin(); }
+        catch(NullPointerException e) {
+            board.placeSchem = false;
+            return;
+        }
+
+        final Vector2d max = screenPos.add(board.WIDTH/cellLen);
+
+        Vector2i offset = board.getMouseGamePos();
+        for (Vector2i pos : draw.getData()) {
+            Vector2i temp = offset.add(pos);;
+            if (temp.x + drawWidth < screenPos.x || temp.x > max.x || temp.y + drawWidth < screenPos.y || temp.y > max.y)
+                continue;
+
+            projectToScreen(shapes, temp, 3, board);
+        }
+
+        // bounding box
+        shapes.add(new Rect(draw.getBoundingBox(cellLen, offset.sub(screenPos).ceil()), 2, Color.WHITE));
+
+        // bounding box of every schematic
+        for (Schematic s : board.allSchematics.keySet()) {
+            // not on the step where the schematic was placed
+            if (board.allSchematics.get(s) != board.game.getStepCount())
+                continue;
+
+            RectType dim = s.getBoundingBox(cellLen, screenPos.mul(-1).ceil());
+            // not on screen
+            if (dim.getPos().x + dim.getSize().x < 0 || dim.getPos().x > board.WIDTH ||
+                dim.getPos().y + dim.getSize().y < 0 || dim.getPos().y > board.HEIGHT)
+                continue;
+
+            shapes.add(new Rect(dim, 2, Color.WHITE));
+        }
+
+        // cancel text
+        shapes.add(new Text("Press "+board.input.keyBind.cancelKey()+" to stop placement", ScreenPos.TOP_CENTER, board.WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+
+        int key = board.input.placeSchemCheck();
+        // rotate schem
+        if (key == 1)
+            Schematic.rotate90(board.tempSchem);
+        // mirror schem left/right
+        else if (key == 2)
+            Schematic.mirrorX(board.tempSchem);
+
+        // check for cancel key
+        if (board.input.checkSavePrompt() == -1)
+            board.placeSchem = false;
+
+        if (board.getButtonPressed(1)) {
+            if (!board.lastLeftMouse) {
+                HashSet<Vector2i> temp = new HashSet<Vector2i>();
+                for (Vector2i pos : draw.getData()) {
+                    Vector2i newPos = pos.add(offset);
+                    board.game.addCell(newPos);
+                    temp.add(newPos);
+                }
+
+                Schematic toAddList = new Schematic(draw);
+                toAddList.setOrigin(Vector2i.overallMin(temp));
+                board.allSchematics.put(toAddList, board.game.getStepCount());
+            }
+
+            board.lastLeftMouse = true;
+        } else
+            board.lastLeftMouse = false;
+    }
+
+    public static void drawKeybindings(List<Shape> shapes, Board board) {
+        shapes.add(new FillRect(0, 0, board.WIDTH, board.HEIGHT, 0, new Color(0f, 0f, 0f, 0.5f)));
+
+        for (Shape i : board.input.getKeyGuide())
+            shapes.add(i);
+        
+        if (board.input.checkKeybindPrompt())
+            board.displayKeybinds = false;
+    }
+
+    public static void createMenu(Board board) {
+        final JMenuBar menu = new JMenuBar();
+
+        // menus
+        JMenu fileMenu = new JMenu("File");
+            JMenuItem lmao = new JMenuItem("Lmao did you expect any file functionality");
+        JMenu helpMenu = new JMenu("Help");
+            JMenuItem keybinds = new JMenuItem("Keybindings");
+            keybinds.setActionCommand("displayKeybinds");
+            keybinds.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) { board.displayKeybinds = true; }
+            });
+        JMenu schem = new JMenu("Schematics");
+            JMenuItem load = new JMenuItem("Load Schematic");
+            load.setActionCommand("load");
+            load.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    board.tempSchem = JSON.loadSchem();
+                    board.placeSchem = true;
+                }
+            });
+
+        fileMenu.add(lmao);
+        helpMenu.add(keybinds);
+        schem.add(load);
+
+        menu.add(fileMenu);
+        menu.add(helpMenu);
+        menu.add(schem);
+        board.setJMenuBar(menu);
     }
 
     public static void setCellLen(int cellLen) {

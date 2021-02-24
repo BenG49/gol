@@ -79,7 +79,8 @@ public class BoardInput {
             keyBind.mode1(),
             keyBind.mode2(),
             keyBind.toggleOptimized(),
-            keyBind.reset()
+            keyBind.reset(),
+            keyBind.mirror()
         }));
         KEYS_ALWAYS_REPEAT = new HashSet<String>(Arrays.asList(new String[] {
             keyBind.up(),
@@ -169,8 +170,13 @@ public class BoardInput {
         return b.hasKey(keyBind.cancelKey());
     }
 
-    public boolean placeSchemRotateCheck() {
-        return keyCanBePressed(keyBind.rotate());
+    public int placeSchemCheck() {
+        if (keyCanBePressed(keyBind.rotate()))
+            return 1;
+        if (keyCanBePressed(keyBind.mirror())) {
+            return 2;
+        } else
+            return 0;
     }
 
     private boolean keyCanBePressed(String key) {

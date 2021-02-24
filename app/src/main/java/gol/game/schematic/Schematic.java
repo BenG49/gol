@@ -134,11 +134,11 @@ public class Schematic {
      * @return RectType of the bounding box around the schematic
      */
     public RectType getBoundingBox(int cellLen, Vector2i offset) {
-        Vector2i min = Vector2i.overallMin(cells);
         Vector2i max = Vector2i.overallMax(cells);
+
         return new RectType(
-            origin.add(min).add(offset).mul(cellLen),
-            max.add(min).abs().mul(cellLen).add((int)(cellLen*0.95))
+            offset.mul(cellLen),
+            max.sub(origin).abs().mul(cellLen).add((int)(cellLen*0.95))
         );
     }
 
@@ -162,12 +162,31 @@ public class Schematic {
 
     public static void rotate90(Schematic in) {
         HashSet<Vector2i> data = in.getData();
-        HashSet<Vector2i> set = new HashSet<Vector2i>();
+        HashSet<Vector2i> output = new HashSet<Vector2i>();
+
+        Vector2i center = Vector2i.avg(Vector2i.overallMax(data), in.origin);
 
         for (Vector2i pos : data)
-            set.add(pos.rotate(Angle.k90deg, Vector2i.ORIGIN));
-        
-        in.cells = set;
+            output.add(pos.rotate(Angle.k90deg, center));
+
+        in.cells = output;
+        in.origin = Vector2i.overallMin(output);
+    }
+
+    public static void mirrorX(Schematic in) {
+        int minX = Vector2i.overallMin(in.getData()).x;
+        int maxX = Vector2i.overallMax(in.getData()).x;
+        int originToCenter = minX+(maxX-minX)/2;
+
+        HashSet<Vector2i> output = new HashSet<Vector2i>();
+
+        for (Vector2i pos : in.getData()) {
+            pos.setX(-(pos.x-originToCenter)*2+pos.x);
+            output.add(pos);
+        }
+
+        in.cells = output;
+        in.origin = Vector2i.overallMin(output);
     }
 
     public static HashSet<Vector2i> getPattern(Pattern pattern, int rotation) {

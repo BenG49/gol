@@ -7,7 +7,7 @@ public class RectType {
         this(new Vector2d(xPos, yPos), new Vector2d(sizeX, sizeY));
     }
     public RectType(Vector2i pos, Vector2i size) {
-        this(pos.toVector2(), size.toVector2());
+        this(pos.asVector2d(), size.asVector2d());
     }
     public RectType(Vector2d pos, Vector2d size)  {
         this.pos = pos;

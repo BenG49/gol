@@ -17,6 +17,15 @@ public class FillRect extends Shape {
         this(pos.x, pos.y, size, size, border, background);
     }
     public FillRect(int x, int y, int width, int height, int border, Color fill) {
+        if (width < 0) {
+            x += width;
+            width *= -1;
+        }
+        if (height < 0) {
+            y += height;
+            height *= -1;
+        }
+
         this.x = x;
         this.y = y;
         this.width = width;

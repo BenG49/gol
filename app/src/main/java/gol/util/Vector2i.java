@@ -1,5 +1,7 @@
 package gol.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -100,7 +102,7 @@ public class Vector2i {
         return output;
     }
 
-    public Vector2d toVector2() {
+    public Vector2d asVector2d() {
         return new Vector2d(this.x, this.y);
     }
 
@@ -178,6 +180,24 @@ public class Vector2i {
 
         Vector2i temp = (Vector2i) a;
         return this.x == temp.x && this.y == temp.y;
+    }
+
+    public static Vector2i avg(List<Vector2i> points) {
+        int totalX = 0, totalY = 0;
+
+        for (Vector2i pos : points) {
+            totalX += pos.x;
+            totalY += pos.y;
+        }
+
+        return new Vector2i(
+            totalX / points.size(),
+            totalY / points.size()
+        );
+    }
+
+    public static Vector2i avg(Vector2i a, Vector2i b) {
+        return avg(new ArrayList<Vector2i>(Arrays.asList(a, b)));
     }
 
     // thanks to Sam B from StuyLib for this method
