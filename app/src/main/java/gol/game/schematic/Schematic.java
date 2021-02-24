@@ -10,6 +10,7 @@ import java.awt.Color;
 
 import com.stuypulse.stuylib.math.Angle;
 
+import gol.util.RectType;
 import gol.util.Vector2i;
 import gol.display.shapes.Rect;
 
@@ -57,6 +58,16 @@ public class Schematic {
             return cells;
         }
     };
+
+    public Schematic(Schematic copy) {
+        this.cells = new HashSet<Vector2i>(copy.cells);
+        this.schematics = new ArrayList<Schematic>(copy.schematics);
+        this.origin = new Vector2i(copy.origin);
+        try {
+            this.path = copy.path;
+            filePathLUT.put(path, this);
+        } catch(NullPointerException e) {}
+    }
 
     public Schematic(Iterator<Vector2i> allCells, Vector2i selA, Vector2i selB) { this(Vector2i.overallWithin(allCells, selA, selB)); }
     public Schematic(HashSet<Vector2i> cells, Vector2i origin) { this(cells, new ArrayList<Schematic>(), origin); }
@@ -115,17 +126,23 @@ public class Schematic {
     }
 
     public String getFilePath() {
-        try {
-            return path;
-        } catch(NullPointerException e) {
-            return null;
-        }
+        return path;
     }
 
-    public Rect getBoundingBox(int border, Color color, int cellLen, Vector2i offset) {
+    /**
+     * 
+     * @param cellLen current cell length, or zoom level
+     * @param offset integer position in cells on the screen
+     * @return RectType of the bounding box around the schematic
+     */
+    public RectType getBoundingBox(int cellLen, Vector2i offset) {
         Vector2i min = Vector2i.overallMin(cells);
         Vector2i max = Vector2i.overallMax(cells);
-        return new Rect(offset.add(min).mul(cellLen), max.add(min).abs().add(1).mul(cellLen), border, color);
+        return new RectType(
+            // offset.add(origin).add(min).mul(cellLen),
+            origin.add(min).add(offset).mul(cellLen),
+            max.add(min).abs().add(1).mul(cellLen)
+        );
     }
 
     public void setFilePath(String path) {

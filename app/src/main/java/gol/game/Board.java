@@ -11,7 +11,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
 import java.util.ArrayList;
-
+import java.util.HashMap;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -53,7 +53,7 @@ public class Board extends InputDisplay {
     private Vector2i mouseDragA;
     private Vector2i mouseDragDelta;
 
-    private List<Schematic> allSchematics;
+    private HashMap<Schematic, Integer> allSchematics;
     private BoardInput input;
     public GameAlg game;
 
@@ -80,7 +80,7 @@ public class Board extends InputDisplay {
         input = new BoardInput(this, binding, cellScreenLen);
         stepTimer = new Timer();
         undoCells = new ArrayList<HashSet<Vector2i>>();
-        allSchematics = new ArrayList<Schematic>();
+        allSchematics = new HashMap<Schematic, Integer>();
 
         betweenSteps = false;
         lastLeftMouse = false;
@@ -214,8 +214,7 @@ public class Board extends InputDisplay {
     public void drawBoardOptimized(List<Shape> shapes) {
         final int CELL_WIDTH = (int) (input.getCellLen() * 0.95);
 
-        Vector2d max = input.getScreenPos().add(new Vector2d(input.getScreenPos().x + WIDTH * input.getCellLen(),
-                input.getScreenPos().y + HEIGHT * input.getCellLen()));
+        final Vector2d max = input.getScreenPos().add(WIDTH/input.getCellLen());
         Iterator<Vector2i> iterator = game.getIterator();
 
         while (iterator.hasNext()) {
@@ -396,22 +395,35 @@ public class Board extends InputDisplay {
             return;
         }
 
-        final int CELL_WIDTH = (int) (input.getCellLen()*0.95);
-        final Vector2d max = input.getScreenPos().add(new Vector2d(
-            input.getScreenPos().x + WIDTH * input.getCellLen(),
-            input.getScreenPos().y + HEIGHT * input.getCellLen()));
+        final int cellLen = input.getCellLen();
+        final Vector2d screenPos = input.getScreenPos();
+        final int CELL_WIDTH = (int) (cellLen*0.95);
+        final Vector2d max = input.getScreenPos().add(WIDTH/input.getCellLen());
 
         Vector2i offset = getMouseGamePos();
         for (Vector2i pos : draw.getData()) {
             Vector2i temp = offset.add(pos);;
-            if (temp.x + CELL_WIDTH < input.getScreenPos().x || temp.x > max.x || temp.y + CELL_WIDTH < input.getScreenPos().y || temp.y > max.y)
+            if (temp.x + CELL_WIDTH < screenPos.x || temp.x > max.x || temp.y + CELL_WIDTH < screenPos.y || temp.y > max.y)
                 continue;
 
             projectToScreen(temp, shapes, 3);
         }
 
         // bounding box
-        shapes.add(draw.getBoundingBox(2, Color.WHITE, input.getCellLen(), offset.sub(input.getScreenPos().floor())));
+        shapes.add(new Rect(draw.getBoundingBox(cellLen, offset.sub(screenPos).ceil()), 2, Color.WHITE));
+        // bounding box of every schematic - PERFORMANCE HIT
+        for (Schematic s : allSchematics.keySet()) {
+            if (allSchematics.get(s) != game.getStepCount())
+                continue;
+
+            RectType dim = s.getBoundingBox(cellLen, screenPos.mul(-1).ceil());
+            // not on screen
+            if (dim.getPos().x + dim.getSize().x < 0 || dim.getPos().x > WIDTH ||
+                dim.getPos().y + dim.getSize().y < 0 || dim.getPos().y > HEIGHT)
+                continue;
+
+            shapes.add(new Rect(dim, 2, Color.WHITE));
+        }
 
         // cancel text
         shapes.add(new Text("Press "+input.keyBind.cancelKey()+" to stop placement", ScreenPos.TOP_CENTER, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
@@ -425,12 +437,22 @@ public class Board extends InputDisplay {
             placeSchem = false;
 
         if (getButtonPressed(1)) {
-            for (Vector2i pos : draw.getData())
-                game.addCell(pos.add(offset));
+            if (!lastLeftMouse) {
+                HashSet<Vector2i> temp = new HashSet<Vector2i>();
+                for (Vector2i pos : draw.getData()) {
+                    Vector2i newPos = pos.add(offset);
+                    game.addCell(newPos);
+                    temp.add(newPos);
+                }
 
-            draw.setOrigin(offset);
-            allSchematics.add(draw);
-        }
+                Schematic toAddList = new Schematic(draw);
+                toAddList.setOrigin(Vector2i.overallMin(temp));
+                allSchematics.put(toAddList, game.getStepCount());
+            }
+
+            lastLeftMouse = true;
+        } else
+            lastLeftMouse = false;
     }
 
     public void undo() {

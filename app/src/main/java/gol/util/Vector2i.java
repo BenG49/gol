@@ -33,6 +33,11 @@ public class Vector2i {
         }
     }
 
+    public Vector2i(Vector2i copy) {
+        this.x = copy.x;
+        this.y = copy.y;
+    }
+
     public void setX(int x) {
         this.x = x;
     }

@@ -1,12 +1,17 @@
 package gol.display.shapes;
 
 import java.awt.*;
+
+import gol.util.RectType;
 import gol.util.Vector2i;
 
 public class Rect extends Shape {
     private final int x, y, width, height, border;
     private final Color c;
 
+    public Rect(RectType rect, int border, Color c) {
+        this(rect.getPos().floor(), rect.getSize().floor(), border, c);
+    }
     public Rect(Vector2i pos, Vector2i size, int border, Color c) {
         this(pos.x, pos.y, size.x, size.y, border, c);
     }
