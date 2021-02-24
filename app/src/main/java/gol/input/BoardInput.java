@@ -10,6 +10,7 @@ import gol.display.shapes.Shape;
 import gol.display.shapes.Text;
 import gol.display.shapes.Text.ScreenPos;
 import gol.game.Board;
+import gol.game.BoardUI;
 import gol.util.RectType;
 import gol.util.Vector2d;
 
@@ -68,6 +69,9 @@ public class BoardInput {
         selectMode = 0;
         runOptimized = false;
 
+        BoardUI.setCellLen(cellScreenLen);
+        BoardUI.setScreenPos(screenPos);
+
         lastKeyPressed = new HashSet<String>();
         keyRepeat = new HashMap<String, Integer>();
         KEYS_DONT_REPEAT = new HashSet<String>(Arrays.asList(new String[] {
@@ -103,16 +107,16 @@ public class BoardInput {
             zoom(true);
 
         if (keyCanBePressed(keyBind.up()))
-            screenPos = screenPos.add(new Vector2d(0, -movementSpeed));
+            move("up");
 
         if (keyCanBePressed(keyBind.down()))
-            screenPos = screenPos.add(new Vector2d(0, movementSpeed));
+            move("down");
 
         if (keyCanBePressed(keyBind.left()))
-            screenPos = screenPos.add(new Vector2d(-movementSpeed, 0));
+            move("left");
 
         if (keyCanBePressed(keyBind.right()))
-            screenPos = screenPos.add(new Vector2d(movementSpeed, 0));
+            move("right");
 
         if (keyCanBePressed(keyBind.toOrigin()))
             screenPos = new Vector2d(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2);
@@ -197,6 +201,19 @@ public class BoardInput {
         return false;
     }
 
+    private void move(String dir) {
+        if (dir == "up")
+            screenPos = screenPos.add(new Vector2d(0, -movementSpeed));
+        else if (dir == "down")
+            screenPos = screenPos.add(new Vector2d(0, movementSpeed));
+        else if (dir == "left")
+            screenPos = screenPos.add(new Vector2d(-movementSpeed, 0));
+        else if (dir == "right")
+            screenPos = screenPos.add(new Vector2d(movementSpeed, 0));
+        
+        BoardUI.setScreenPos(screenPos);
+    }
+
     private void zoom(boolean zoomIn) {
         final Vector2d screenCenter = screenPos.add(new Vector2d(b.WIDTH/2/cellScreenLen, b.HEIGHT/2/cellScreenLen));
 
@@ -211,6 +228,9 @@ public class BoardInput {
             cellScreenLen = ZOOM_MAX;
         else
             screenPos = screenCenter.sub(new Vector2d(b.WIDTH/cellScreenLen/2, b.HEIGHT/cellScreenLen/2));
+        
+        BoardUI.setCellLen(cellScreenLen);
+        BoardUI.setScreenPos(screenPos);
     }
 
     // get methods

@@ -6,13 +6,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.awt.Color;
 
 import com.stuypulse.stuylib.math.Angle;
 
 import gol.util.RectType;
 import gol.util.Vector2i;
-import gol.display.shapes.Rect;
 
 public class Schematic {
 
@@ -139,9 +137,8 @@ public class Schematic {
         Vector2i min = Vector2i.overallMin(cells);
         Vector2i max = Vector2i.overallMax(cells);
         return new RectType(
-            // offset.add(origin).add(min).mul(cellLen),
             origin.add(min).add(offset).mul(cellLen),
-            max.add(min).abs().add(1).mul(cellLen)
+            max.add(min).abs().mul(cellLen).add((int)(cellLen*0.95))
         );
     }
 

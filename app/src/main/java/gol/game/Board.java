@@ -5,11 +5,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.awt.Color;
@@ -17,10 +12,13 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+
 import gol.display.shapes.*;
 import gol.display.shapes.Text.ScreenPos;
-import gol.game.schematic.JSON;
-import gol.game.schematic.Schematic;
+import gol.game.schematic.*;
 import gol.input.*;
 import gol.util.*;
 
@@ -36,8 +34,8 @@ public class Board extends InputDisplay {
     private boolean lastRightMouse;
 
     // selection points
-    private Vector2i selectA;
-    private Vector2i selectB;
+    protected Vector2i selectA;
+    protected Vector2i selectB;
 
     // display modes
     private boolean promptingSel;
@@ -54,22 +52,18 @@ public class Board extends InputDisplay {
     private Vector2i mouseDragDelta;
 
     private HashMap<Schematic, Integer> allSchematics;
-    private BoardInput input;
+    protected BoardInput input;
     public GameAlg game;
 
     private static final int DEFAULT_WIDTH = 1000;
     private static final int OPTIMIZED_DRAW_INTERVAL = 50;
     private static final boolean OPTIMIZED_RENDER = true;
-    private static final boolean USING_MENU = true;
 
     public Board() {
         this(new HashSet<Vector2i>(), 24, new KeyBinding());
     }
     public Board(HashSet<Vector2i> aliveCells) {
         this(aliveCells, 24, new KeyBinding());
-    }
-    public Board(Schematic schem) {
-        this(schem.getData(), 24, new KeyBinding());
     }
     public Board(HashSet<Vector2i> aliveCells, int cellScreenLen, KeyBinding binding) {
         super(DEFAULT_WIDTH, DEFAULT_WIDTH, Color.BLACK);
@@ -103,20 +97,18 @@ public class Board extends InputDisplay {
                     game.step();
 
                 if (OPTIMIZED_RENDER && game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
-                    drawBoardOptimized(shapes);
-            } else if (promptingSel) {
-                drawBoard(shapes);
-                selectionPrompt(shapes);
-            } else if (displayKeybinds) {
-                drawBoard(shapes);
-                drawKeybindings(shapes);
-            } else if (placeSchem) {
-                drawBoard(shapes);
-                placeSchemDraw(shapes, tempSchem);
-                input.checkKeysOptimized();
+                    BoardUI.drawOptimized(shapes, this);
+                    
             } else {
-                if (input.getStepAuto()) {
-                    if (!betweenSteps) {
+                if (promptingSel)
+                    selectionPrompt(shapes);
+                else if (displayKeybinds)
+                    drawKeybindings(shapes);
+                else if (placeSchem) {
+                    placeSchemDraw(shapes, tempSchem);
+                    input.checkKeysOptimized();
+                } else {
+                    if (input.getStepAuto() && !betweenSteps) {
                         game.step();
                         ctrlZClear();
 
@@ -131,14 +123,15 @@ public class Board extends InputDisplay {
                             stepTimer.schedule(stepTimerTask, input.getStepTimeMillis());
                         }
                     }
-                }
-                // laptop specs:
-                // 8411 steps non optimized 30 secs full speed
-                // 436730 steps optimized 30 secs
+                    // laptop specs:
+                    // 8411 steps non optimized 30 secs full speed
+                    // 436730 steps optimized 30 secs
 
-                drawBoard(shapes);
-                input.checkKeys();
-                checkMouseClicks();
+                    input.checkKeys();
+                    checkMouseClicks();
+                }
+
+                BoardUI.drawBoard(shapes, this);
             }
 
             if (input.getRunOptimized()) {
@@ -150,8 +143,8 @@ public class Board extends InputDisplay {
     }
 
     private void checkMouseClicks() {
-        int selectMode = input.getSelectMode();
-        Vector2i mousePos = getMouseGamePos();
+        final int selectMode = input.getSelectMode();
+        final Vector2i mousePos = getMouseGamePos();
 
         // LEFT CLICK
         if (getButtonPressed(1)) {
@@ -161,9 +154,8 @@ public class Board extends InputDisplay {
                     promptingSel = false;
                 else if (selectMode == 0 && !input.getStepAuto())
                     undoCells.add(new HashSet<Vector2i>());
-                else if (selectMode == 1) {
+                else if (selectMode == 1)
                     selectA = mousePos;
-                }
 
                 lastLeftMouse = true;
             }
@@ -172,6 +164,7 @@ public class Board extends InputDisplay {
             if (selectMode == 0 && !promptingSel) {
                 if (!game.hasCell(mousePos) && !input.getStepAuto())
                     undoCells.get(undoIndex).add(mousePos);
+
                 game.addCell(mousePos);
             }
         } else {
@@ -193,11 +186,13 @@ public class Board extends InputDisplay {
             if (!lastRightMouse) {
                 if (promptingSel)
                     mouseDragA = mousePos;
+
                 lastRightMouse = true;
             }
 
             if (promptingSel)
                 mouseDragDelta = mouseDragA.sub(mousePos);
+
             // REMOVE CELL
             else if (selectMode == 0 && game.hasCell(mousePos))
                 game.removeCell(mousePos);
@@ -211,101 +206,15 @@ public class Board extends InputDisplay {
         }
     }
 
-    public void drawBoardOptimized(List<Shape> shapes) {
-        final int CELL_WIDTH = (int) (input.getCellLen() * 0.95);
-
-        final Vector2d max = input.getScreenPos().add(WIDTH/input.getCellLen());
-        Iterator<Vector2i> iterator = game.getIterator();
-
-        while (iterator.hasNext()) {
-            Vector2i pos = iterator.next();
-
-            if (pos.x + CELL_WIDTH < input.getScreenPos().x || pos.x > max.x || pos.y + CELL_WIDTH < input.getScreenPos().y || pos.y > max.y)
-                continue;
-
-            projectToScreen(pos, shapes, 0);
-        }
-
-        // pause indicator
-        if (!input.getStepAuto()) {
-            shapes.add(new FillRect(10, 10, 12, 40, 0, Color.WHITE));
-            shapes.add(new FillRect(30, 10, 12, 40, 0, Color.WHITE));
-        }
-    }
-
-    public void drawBoard(List<Shape> shapes) {
-        drawBoardOptimized(shapes);
-
-        // cross around 0,0
-        for (int y = -2; y < 3; y++)
-            for (int x = -2; x < 3; x++)
-                if (x == 0 || y == 0)
-                    projectToScreen(new Vector2i(x, y), shapes, 1);
-
-        // selection area
-        if (input.getSelectMode() == 1 && getButtonPressed(1)) {
-            int cellLen = input.getCellLen();
-            Vector2d screenPos = input.getScreenPos();
-
-            Vector2i drawPos = selectA.sub(screenPos).mul(cellLen).floor();
-            Vector2d mouseScreenPos = new Vector2d(getMousePos(USING_MENU).x * WIDTH, (1 - getMousePos(USING_MENU).y) * HEIGHT);
-            Vector2i size = mouseScreenPos.add(screenPos.div(cellLen)).sub(drawPos).ceil().floorToInterval(cellLen);
-
-            if (size.x < 0) {
-                drawPos.setX(drawPos.x + size.x - cellLen);
-                size.setX(Math.abs(size.x)+input.getCellLen()*2);
-            }
-            if (size.y < 0) {
-                drawPos.setY(drawPos.y + size.y - cellLen);
-                size.setY(Math.abs(size.y)+input.getCellLen()*2);
-            }
-
-            shapes.add(new FillRect(drawPos, size, 0, new Color(1f, 1f, 1f, 0.5f)));
-        }
-        // mouse highlight
-        else if (getMousePos(USING_MENU).x > 0 && getMousePos(USING_MENU).x < 1 && getMousePos(USING_MENU).y > 0 && getMousePos(USING_MENU).y < 1)
-            projectToScreen(getMouseGamePos(), shapes, 2);
-
-        // bottom left
-        shapes.add(new Text(
-                new String[] {
-                        new Vector2i(WIDTH / input.getCellLen() / 2, HEIGHT / input.getCellLen() / 2)
-                                .add(input.getScreenPos().floor()).toString(),
-                        "Steps: " + game.getStepCount() },
-                ScreenPos.BOT_LEFT, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
-        // bottom right
-        shapes.add(new Text("Speed: " + input.getSpeed0to10(), ScreenPos.BOT_RIGHT, WIDTH, Color.WHITE,
-                new Font("Cascadia Code", Font.PLAIN, 20)));
-    }
-
-    private void projectToScreen(Vector2i pos, List<Shape> shapes, int highlight) {
-        final int CELL_WIDTH = (int) (input.getCellLen() * 0.95);
-
-        Vector2i drawPos = pos.sub(input.getScreenPos().floor()).mul(input.getCellLen());
-        Color color;
-
-        if (highlight == 1)
-            color = new Color(1f, 1f, 1f, 0.25f);
-        else if (highlight == 2)
-            color = new Color(1f, 1f, 1f, 0.5f);
-        else if (highlight == 3)
-            color = new Color(1f, 1f, 1f, 0.75f);
-        else
-            color = Color.WHITE;
-
-        shapes.add(new FillRect(drawPos, CELL_WIDTH, 0, color));
-    }
-
     // something weird with this rounding error
     public Vector2i getMouseGamePos() {
         double cellLen = input.getCellLen();
-        Vector2d mouse = getMousePos(USING_MENU);
+        Vector2d mouse = getMousePos(BoardUI.USING_MENU);
 
         return new Vector2d(mouse.x, 1-mouse.y).mul(HEIGHT/cellLen).add(input.getScreenPos()).floor();
     }
 
     private void selectionPrompt(List<Shape> shapes) {
-        // shapes.add(new FillRect(0, 0, WIDTH, HEIGHT, 0, new Color(0f, 0f, 0f, 0.5f)));
         shapes.add(new Text("Type "+input.keyBind.saveKey()+" to save, "+input.keyBind.cancelKey()+" to exit, "+input.keyBind.delete()+" to delete cells",
             ScreenPos.TOP_CENTER, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
 
@@ -325,7 +234,7 @@ public class Board extends InputDisplay {
             }
 
             for (Vector2i pos : toDraw)
-                projectToScreen(pos, shapes, 1);
+                BoardUI.projectToScreen(shapes, pos, 1, this);
 
             // mouse has been released
             try { mouseDragA.equals(Vector2i.ORIGIN); }
@@ -406,13 +315,15 @@ public class Board extends InputDisplay {
             if (temp.x + CELL_WIDTH < screenPos.x || temp.x > max.x || temp.y + CELL_WIDTH < screenPos.y || temp.y > max.y)
                 continue;
 
-            projectToScreen(temp, shapes, 3);
+            BoardUI.projectToScreen(shapes, temp, 3, this);
         }
 
         // bounding box
         shapes.add(new Rect(draw.getBoundingBox(cellLen, offset.sub(screenPos).ceil()), 2, Color.WHITE));
-        // bounding box of every schematic - PERFORMANCE HIT
+
+        // bounding box of every schematic
         for (Schematic s : allSchematics.keySet()) {
+            // not on the step where the schematic was placed
             if (allSchematics.get(s) != game.getStepCount())
                 continue;
 
