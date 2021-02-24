@@ -1,6 +1,7 @@
 package gol.display.shapes;
 
 import java.awt.*;
+import java.awt.Graphics2D;
 
 import gol.util.RectType;
 import gol.util.Vector2i;
@@ -39,19 +40,10 @@ public class Rect extends Shape {
         this.c = c;
     }
 
-    public ShapeType getShapeType() {
-        return ShapeType.RECTANGLE;
-    }
-
-    public Graphics2D draw(Graphics2D g) {
+    @Override
+    public void draw(Graphics2D g) {
         g.setColor(c);
         g.setStroke(new BasicStroke(border));
         g.drawRect(x, y, width, height);
-
-        return g;
-    }
-
-    public int[] getDimensions() {
-        return new int[] {x, y, width, height };
     }
 }

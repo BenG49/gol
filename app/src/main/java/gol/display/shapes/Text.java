@@ -1,6 +1,7 @@
 package gol.display.shapes;
 
 import java.awt.*;
+import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -106,11 +107,8 @@ public class Text extends Shape {
         usePreset = false;
     }
 
-    public ShapeType getShapeType() {
-        return ShapeType.TEXT;
-    }
-
-    public Graphics2D draw(Graphics2D g) {
+    @Override
+    public void draw(Graphics2D g) {
         g.setFont(font);
         g.setColor(c);
         int fontHeight = g.getFontMetrics(font).getAscent();
@@ -127,7 +125,5 @@ public class Text extends Shape {
                 g.drawString(text.get(i), pos.x, baseHeight+i*(g.getFontMetrics(font).getAscent()+PADDING));
             }
         }
-
-        return g;
     }
 }

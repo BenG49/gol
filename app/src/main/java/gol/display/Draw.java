@@ -27,7 +27,7 @@ public class Draw extends JPanel {
 
         Graphics2D g2 = (Graphics2D) g;
         for (Shape i : shapes) {
-            g2 = i.draw(g2);
+            i.draw(g2);
         }
     }
 }

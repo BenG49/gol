@@ -64,7 +64,7 @@ public class BoardUI {
         // selection area
         if (board.input.getSelectMode() == 1 && board.getButtonPressed(1)) {
             Vector2i drawPos = board.selectA.sub(screenPos).mul(cellLen).floor();
-            Vector2d mouseScreenPos = new Vector2d(mousePos.x * board.WIDTH, (1 - mousePos.y) * board.HEIGHT);
+            Vector2d mouseScreenPos = mousePos.mul(board.WIDTH);
             Vector2i size = mouseScreenPos.add(screenPos.div(cellLen)).sub(drawPos).ceil().floorToInterval(cellLen);
 
             shapes.add(new FillRect(drawPos, size, 0, new Color(1f, 1f, 1f, 0.5f)));
@@ -169,6 +169,10 @@ public class BoardUI {
             board.lastLeftMouse = true;
         } else
             board.lastLeftMouse = false;
+    }
+
+    private static void drawGrid(List<Shape> shapes) {
+
     }
 
     public static void drawKeybindings(List<Shape> shapes, Board board) {

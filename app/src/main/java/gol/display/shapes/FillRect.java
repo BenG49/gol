@@ -1,6 +1,7 @@
 package gol.display.shapes;
 
 import java.awt.*;
+import java.awt.Graphics2D;
 import gol.util.Vector2i;
 
 public class FillRect extends Shape {
@@ -34,15 +35,10 @@ public class FillRect extends Shape {
         this.fill = fill;
     }
 
-    public ShapeType getShapeType() {
-        return ShapeType.FILL_RECTANGLE;
-    }
-
-    public Graphics2D draw(Graphics2D g) {
+    @Override
+    public void draw(Graphics2D g) {
         g.setColor(fill);
         g.setStroke(new BasicStroke(border));
         g.fillRect(x, y, width, height);
-        
-        return g;
     }
 }

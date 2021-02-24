@@ -202,10 +202,7 @@ public class Board extends InputDisplay {
 
     // something weird with this rounding error
     public Vector2i getMouseGamePos() {
-        double cellLen = input.getCellLen();
-        Vector2d mouse = getMousePos(BoardUI.USING_MENU);
-
-        return new Vector2d(mouse.x, 1-mouse.y).mul(HEIGHT/cellLen).add(input.getScreenPos()).floor();
+        return getMousePos(BoardUI.USING_MENU).mul(HEIGHT/(double)input.getCellLen()).add(input.getScreenPos()).floor();
     }
 
     private void selectionPrompt(List<Shape> shapes) {
