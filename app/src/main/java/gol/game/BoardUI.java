@@ -12,13 +12,11 @@ import java.awt.event.ActionListener;
 import java.awt.Color;
 import java.awt.Font;
 
-import bglib.display.shapes.*;
 import bglib.display.shapes.Text.ScreenPos;
-import gol.game.schematic.JSON;
-import gol.game.schematic.Schematic;
-import bglib.util.RectType;
-import bglib.util.Vector2d;
-import bglib.util.Vector2i;
+import bglib.display.shapes.*;
+import bglib.util.*;
+
+import gol.game.schematic.*;
 
 public class BoardUI {
 

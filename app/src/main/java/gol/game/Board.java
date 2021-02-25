@@ -7,14 +7,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.awt.Color;
-import java.awt.Font;
+import java.awt.*;
 
 import bglib.display.shapes.*;
 import bglib.display.shapes.Text.ScreenPos;
+import bglib.util.*;
+
 import gol.game.schematic.*;
 import gol.input.*;
-import bglib.util.*;
 
 public class Board extends InputDisplay {
 

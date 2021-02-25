@@ -9,8 +9,10 @@ import java.util.HashSet;
 import bglib.display.shapes.Shape;
 import bglib.display.shapes.Text;
 import bglib.display.shapes.Text.ScreenPos;
+
 import gol.game.Board;
 import gol.game.BoardUI;
+
 import bglib.util.RectType;
 import bglib.util.Vector2d;
 
