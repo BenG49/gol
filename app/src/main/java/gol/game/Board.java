@@ -10,11 +10,11 @@ import java.util.HashMap;
 import java.awt.Color;
 import java.awt.Font;
 
-import gol.display.shapes.*;
-import gol.display.shapes.Text.ScreenPos;
+import bglib.display.shapes.*;
+import bglib.display.shapes.Text.ScreenPos;
 import gol.game.schematic.*;
 import gol.input.*;
-import gol.util.*;
+import bglib.util.*;
 
 public class Board extends InputDisplay {
 
@@ -83,23 +83,21 @@ public class Board extends InputDisplay {
 
     public void run() {
         while (input.getRun()) {
-            List<Shape> shapes = new ArrayList<Shape>();
-
             if (input.getRunOptimized()) {
                 input.checkKeysOptimized();
                 if (input.getStepAuto())
                     game.step();
 
                 if (OPTIMIZED_RENDER && game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
-                    BoardUI.drawOptimized(shapes, this);
+                    BoardUI.drawOptimized(this);
                     
             } else {
                 if (promptingSel)
-                    selectionPrompt(shapes);
+                    selectionPrompt();
                 else if (displayKeybinds)
-                    BoardUI.drawKeybindings(shapes, this);
+                    BoardUI.drawKeybindings(this);
                 else if (placeSchem) {
-                    BoardUI.placeSchemDraw(shapes, tempSchem, this);
+                    BoardUI.placeSchemDraw(tempSchem, this);
                     input.checkKeysOptimized();
                 } else {
                     if (input.getStepAuto() && !betweenSteps) {
@@ -125,14 +123,14 @@ public class Board extends InputDisplay {
                     checkMouseClicks();
                 }
 
-                BoardUI.drawBoard(shapes, this);
+                BoardUI.drawBoard( this);
             }
 
             if (input.getRunOptimized()) {
                 if (OPTIMIZED_RENDER && game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
-                    draw(shapes);
+                    draw();
             } else
-                draw(shapes);
+                draw();
         }
     }
 
@@ -205,8 +203,8 @@ public class Board extends InputDisplay {
         return getMousePos(BoardUI.USING_MENU).mul(HEIGHT/(double)input.getCellLen()).add(input.getScreenPos()).floor();
     }
 
-    private void selectionPrompt(List<Shape> shapes) {
-        shapes.add(new Text("Type "+input.keyBind.saveKey()+" to save, "+input.keyBind.cancelKey()+" to exit, "+input.keyBind.delete()+" to delete cells",
+    private void selectionPrompt() {
+        frameAdd(new Text("Type "+input.keyBind.saveKey()+" to save, "+input.keyBind.cancelKey()+" to exit, "+input.keyBind.delete()+" to delete cells",
             ScreenPos.TOP_CENTER, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
 
         int choice = input.checkSavePrompt();
@@ -225,7 +223,7 @@ public class Board extends InputDisplay {
             }
 
             for (Vector2i pos : toDraw)
-                BoardUI.projectToScreen(shapes, pos, 1, this);
+                BoardUI.projectToScreen(pos, 1, this);
 
             // mouse has been released
             try { mouseDragA.equals(Vector2i.ORIGIN); }

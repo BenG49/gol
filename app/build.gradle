@@ -34,9 +34,9 @@ dependencies {
 
     // JSON.Simple
     implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1'
-    // compile 'org.slf4j:slf4j-api:1.7.25'
-    // compile 'org.json:json:20160212'
-    // compile 'com.googlecode.json-simple:json-simple:1.1.1'
+
+    // bglib
+    compile files('libs/lib.jar')
 }
 
 application {

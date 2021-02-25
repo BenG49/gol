@@ -2,8 +2,9 @@ package gol.input;
 
 import java.awt.Color;
 
-import gol.display.Display;
-import gol.util.Vector2d;
+import bglib.display.Display;
+import bglib.input.MouseClick;
+import bglib.util.Vector2d;
 
 import com.stuypulse.stuylib.util.chart.KeyTracker;
 import com.stuypulse.stuylib.util.chart.MouseTracker;
@@ -16,7 +17,7 @@ public class InputDisplay extends Display {
     public InputDisplay() { this(500, 500, Color.WHITE); }
     public InputDisplay(Color background) { this(500, 500, background); }
     public InputDisplay(int width, int height, Color background) {
-        super(width, height, background);
+        super(width, height, background, "");
 
         keyboard = new KeyTracker();
         mouse = new MouseTracker(this);

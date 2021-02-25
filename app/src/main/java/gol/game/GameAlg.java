@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import gol.game.schematic.Schematic;
-import gol.util.Vector2i;
+import bglib.util.Vector2i;
 
 public class GameAlg {
 

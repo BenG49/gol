@@ -9,8 +9,8 @@ import java.util.List;
 
 import com.stuypulse.stuylib.math.Angle;
 
-import gol.util.RectType;
-import gol.util.Vector2i;
+import bglib.util.RectType;
+import bglib.util.Vector2i;
 
 public class Schematic {
 

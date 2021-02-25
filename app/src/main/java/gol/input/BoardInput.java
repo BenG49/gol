@@ -6,13 +6,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import gol.display.shapes.Shape;
-import gol.display.shapes.Text;
-import gol.display.shapes.Text.ScreenPos;
+import bglib.display.shapes.Shape;
+import bglib.display.shapes.Text;
+import bglib.display.shapes.Text.ScreenPos;
 import gol.game.Board;
 import gol.game.BoardUI;
-import gol.util.RectType;
-import gol.util.Vector2d;
+import bglib.util.RectType;
+import bglib.util.Vector2d;
 
 public class BoardInput {
     private Board b;
