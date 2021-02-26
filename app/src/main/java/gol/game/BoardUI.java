@@ -60,15 +60,19 @@ public class BoardUI {
 
         // selection area
         if (board.input.getSelectMode() == 1 && board.getButtonPressed(1)) {
-            /* Vector2i drawPos = posToDraw(board.selectA);
-            Vector2d mouseScreenPos = mousePos.mul(new Vector2i(board.getDSize()).asVector2d());
-            Vector2i size = mouseScreenPos.add(screenPos.div(cellLen)).sub(drawPos).ceil().floorToInterval(cellLen);
+            Vector2i pos = new Vector2i(board.selectA);
+            Vector2i size = pos.sub(board.getMouseGamePos()).mul(-cellLen);
 
-            board.frameAdd(new FillRect(new RectType(drawPos, size), 0, new Color(1f, 1f, 1f, 0.5f)));*/
+            if (size.x < 0) {
+                pos.setX(pos.x+size.x/cellLen);
+                size.setX(-size.x);
+            }
+            if (size.y < 0) {
+                pos.setY(pos.y+size.y/cellLen);
+                size.setY(-size.y);
+            }
 
-            Vector2i size = board.getMouseGamePos().sub(board.selectA);
-
-            board.frameAdd(new FillRect(new RectType(board.selectA, size), 0, new Color(1f, 1f, 1f, 0.5f)));
+            board.frameAdd(new FillRect(new RectType(pos, size), 0, new Color(1f, 1f, 1f, 0.5f)));
         }
         // mouse highlight
         else if (mousePos.x > 0 && mousePos.x < 1 && mousePos.y > 0 && mousePos.y < 1)
