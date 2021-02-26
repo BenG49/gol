@@ -133,10 +133,11 @@ public class Schematic {
      * @param offset integer position in cells on the screen
      * @return RectType of the bounding box around the schematic
      */
-    public RectType getBoundingBox(int cellLen, Vector2i offset) {
+    public RectType getBoundingBox(int cellLen, int originMult) {
+        Vector2i sizeCells = Vector2i.overallMax(cells).sub(Vector2i.overallMin(cells)).abs();
         return new RectType(
-            offset.mul(cellLen),
-            Vector2i.overallMax(cells).sub(origin).abs().mul(cellLen).add((int)(cellLen*0.95))
+            origin.sub(sizeCells),
+            sizeCells.mul(cellLen).add((int)(cellLen*0.95))
         );
     }
 
@@ -145,8 +146,8 @@ public class Schematic {
         filePathLUT.put(path, this);
     }
 
-    public void setOrigin(Vector2i origin) {
-        this.origin = origin;
+    public void setOrigin(Vector2i offset) {
+        this.origin = Vector2i.overallMin(cells).add(offset);
     }
 
     public static List<Vector2i> rotate90(List<Vector2i> in) {
@@ -162,13 +163,14 @@ public class Schematic {
         HashSet<Vector2i> data = in.getData();
         HashSet<Vector2i> output = new HashSet<Vector2i>();
 
-        Vector2i center = Vector2i.avg(Vector2i.overallMax(data), in.origin);
+        // Vector2i center = Vector2i.avg(Vector2i.overallMax(data), Vector2i.overallMin(data));
+        Vector2i center = Vector2i.overallMax(data);
 
+        // TODO: rotate nested schematics
         for (Vector2i pos : data)
             output.add(pos.rotate(Angle.k90deg, center));
-
-        in.cells = output;
-        in.origin = Vector2i.overallMin(output);
+        
+        in.cells = normalize(output);
     }
 
     public static void mirrorX(Schematic in) {
@@ -183,8 +185,17 @@ public class Schematic {
             output.add(pos);
         }
 
-        in.cells = output;
-        in.origin = Vector2i.overallMin(output);
+        in.cells = normalize(output);
+    }
+
+    public static HashSet<Vector2i> normalize(HashSet<Vector2i> data) {
+        Vector2i offset = Vector2i.overallMin(data);
+        HashSet<Vector2i> output = new HashSet<Vector2i>();
+
+        for (Vector2i pos : data)
+            output.add(pos.sub(offset));
+
+        return output;
     }
 
     public static HashSet<Vector2i> getPattern(Pattern pattern, int rotation) {

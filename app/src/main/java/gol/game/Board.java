@@ -11,6 +11,7 @@ import java.awt.*;
 
 import bglib.input.InputDisplay;
 import bglib.display.shapes.*;
+import bglib.display.shapes.Shape.Conversion;
 import bglib.display.shapes.AlignText.Alignment;
 import bglib.util.*;
 
@@ -54,6 +55,8 @@ public class Board extends InputDisplay {
     private static final int OPTIMIZED_DRAW_INTERVAL = 50;
     private static final boolean OPTIMIZED_RENDER = true;
 
+    public final Conversion conversion;
+
     public Board() {
         this(new HashSet<Vector2i>(), 24, new KeyBinding());
     }
@@ -70,6 +73,7 @@ public class Board extends InputDisplay {
         stepTimer = new Timer();
         undoCells = new ArrayList<HashSet<Vector2i>>();
         allSchematics = new HashMap<Schematic, Integer>();
+        conversion = (pos) -> (pos.sub(input.getScreenPos()).mul(input.getCellLen()).floor());
 
         betweenSteps = false;
         lastLeftMouse = false;
@@ -124,14 +128,14 @@ public class Board extends InputDisplay {
                     checkMouseClicks();
                 }
 
-                BoardUI.drawBoard( this);
+                BoardUI.drawBoard(this);
             }
 
             if (input.getRunOptimized()) {
                 if (OPTIMIZED_RENDER && game.getStepCount() % OPTIMIZED_DRAW_INTERVAL == 0)
-                    draw();
+                    draw(conversion);
             } else
-                draw();
+                draw(conversion);
         }
     }
 
