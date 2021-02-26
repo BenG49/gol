@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import bglib.display.shapes.Shape;
-import bglib.display.shapes.Text;
-import bglib.display.shapes.Text.ScreenPos;
+import bglib.display.shapes.AlignText;
+import bglib.display.shapes.AlignText.Alignment;
 
 import gol.game.Board;
 import gol.game.BoardUI;
@@ -36,9 +36,9 @@ public class BoardInput {
     // LUT for if key always repeats
     private final HashSet<String> KEYS_ALWAYS_REPEAT;
     // zoom min
-    private final int ZOOM_MIN = 2;
+    public final int CELL_LEN_MIN = 2;
     // zoom max
-    private final int ZOOM_MAX = 500;
+    public final int CELL_LEN_MAX = 500;
     
     // <--THESE VALUES ARE COMPLETELY DEPENDENT ON PROGRAM SPEED-->
     // amount of time to wait until spamming
@@ -230,10 +230,10 @@ public class BoardInput {
         else
             cellScreenLen = (int)Math.round(cellScreenLen/ZOOM_MULT);
 
-        if (cellScreenLen < ZOOM_MIN)
-            cellScreenLen = ZOOM_MIN;
-        else if (cellScreenLen > ZOOM_MAX)
-            cellScreenLen = ZOOM_MAX;
+        if (cellScreenLen < CELL_LEN_MIN)
+            cellScreenLen = CELL_LEN_MIN;
+        else if (cellScreenLen > CELL_LEN_MAX)
+            cellScreenLen = CELL_LEN_MAX;
         else
             screenPos = screenCenter.sub(new Vector2d(b.WIDTH/cellScreenLen/2, b.HEIGHT/cellScreenLen/2));
         
@@ -247,7 +247,7 @@ public class BoardInput {
         final int BOTTOM_RATIO = (int)(b.HEIGHT*0.9);
         final Font font = new Font("Cascadia Code", Font.PLAIN, 20);
 
-        return new Text[] {new Text(new String[] {
+        return new AlignText[] {new AlignText(new String[] {
                 keyBind.toggleAutoKey()+                    ":",
                 keyBind.up()+","+keyBind.left()+","+keyBind.down()+","+keyBind.right()+":",
                 keyBind.zoomIn()+","+keyBind.zoomOut()+     ":",
@@ -260,9 +260,9 @@ public class BoardInput {
                 keyBind.reset()+                            ":",
                 keyBind.undo()+                             ":",
                 "Esc:"
-            }, ScreenPos.TOP_RIGHT, new RectType(0, 0, CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
+            }, Alignment.TOP_RIGHT, new RectType(0, 0, CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font, false),
 
-            new Text(new String[] {
+            new AlignText(new String[] {
                 "toggle pause and play",
                 "move around",
                 "zoom in and out, respectively",
@@ -275,9 +275,9 @@ public class BoardInput {
                 "reset the sim back to step 0",
                 "undo the last set of cells drawn",
                 "close the simulation"
-            }, ScreenPos.TOP_LEFT, new RectType(CENTER_RATIO, 0, b.WIDTH-CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font),
+            }, Alignment.TOP_LEFT, new RectType(CENTER_RATIO, 0, b.WIDTH-CENTER_RATIO, BOTTOM_RATIO), Color.WHITE, font, false),
 
-            new Text("Press "+keyBind.cancelKey()+" to exit.", ScreenPos.BOT_CENTER, new RectType(0, BOTTOM_RATIO, b.WIDTH, b.HEIGHT-BOTTOM_RATIO), Color.WHITE, font)
+            new AlignText("Press "+keyBind.cancelKey()+" to exit.", Alignment.BOT_CENTER, new RectType(0, BOTTOM_RATIO, b.WIDTH, b.HEIGHT-BOTTOM_RATIO), Color.WHITE, font, false)
         };
     }
 

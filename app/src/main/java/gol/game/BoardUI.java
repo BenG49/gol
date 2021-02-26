@@ -12,7 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.Color;
 import java.awt.Font;
 
-import bglib.display.shapes.Text.ScreenPos;
+import bglib.display.shapes.AlignText.Alignment;
 import bglib.display.shapes.*;
 import bglib.util.*;
 
@@ -27,7 +27,7 @@ public class BoardUI {
     public static final boolean USING_MENU = true;
 
     public static void drawOptimized(Board board) {
-        final Vector2d max = board.input.getScreenPos().add(board.WIDTH/cellLen);
+        final Vector2d max = board.input.getScreenPos().add(board.getDSize().div(cellLen));
 
         Iterator<Vector2i> iterator = board.game.getIterator();
         while (iterator.hasNext()) {
@@ -42,8 +42,8 @@ public class BoardUI {
 
         // pause indicator
         if (!board.input.getStepAuto()) {
-            board.frameAdd(new FillRect(10, 10, 12, 40, 0, Color.WHITE));
-            board.frameAdd(new FillRect(30, 10, 12, 40, 0, Color.WHITE));
+            board.frameAdd(new FillRect(new RectType(10, 10, 12, 40), 0, Color.WHITE));
+            board.frameAdd(new FillRect(new RectType(30, 10, 12, 40), 0, Color.WHITE));
         }
     }
 
@@ -60,32 +60,34 @@ public class BoardUI {
 
         // selection area
         if (board.input.getSelectMode() == 1 && board.getButtonPressed(1)) {
-            Vector2i drawPos = board.selectA.sub(screenPos).mul(cellLen).floor();
-            Vector2d mouseScreenPos = mousePos.mul(board.WIDTH);
+            // Vector2i drawPos = board.selectA.sub(screenPos).mul(cellLen).floor();
+            Vector2i drawPos = posToDraw(board.selectA);
+            Vector2d mouseScreenPos = mousePos;
+            mouseScreenPos.setX(mousePos.x*board.WIDTH);
+            mouseScreenPos.setY(mousePos.y*board.HEIGHT);
             Vector2i size = mouseScreenPos.add(screenPos.div(cellLen)).sub(drawPos).ceil().floorToInterval(cellLen);
 
-            board.frameAdd(new FillRect(drawPos, size, 0, new Color(1f, 1f, 1f, 0.5f)));
+            board.frameAdd(new FillRect(new RectType(drawPos, size), 0, new Color(1f, 1f, 1f, 0.5f)));
         }
         // mouse highlight
         else if (mousePos.x > 0 && mousePos.x < 1 && mousePos.y > 0 && mousePos.y < 1)
             projectToScreen(board.getMouseGamePos(), 2, board);
 
         // bottom left
-        board.frameAdd(new Text(
+        board.frameAdd(new AlignText(
                 new String[] {
-                        new Vector2i(board.WIDTH / cellLen / 2, board.HEIGHT / cellLen / 2).add(screenPos.floor()).toString(),
+                        board.getDSize().div(cellLen).div(2).add(screenPos.floor()).toString(),
                         "Steps: " + board.game.getStepCount()
                     },
-                ScreenPos.BOT_LEFT, board.WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+                Alignment.BOT_LEFT, board.getDimensions(), Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20), false));
         // bottom right
-        board.frameAdd(new Text("Speed: " + board.input.getSpeed0to10(), ScreenPos.BOT_RIGHT, board.WIDTH, Color.WHITE,
-                new Font("Cascadia Code", Font.PLAIN, 20)));
+        board.frameAdd(new AlignText("Speed: " + board.input.getSpeed0to10(), Alignment.BOT_RIGHT, board.getDimensions(), Color.WHITE,
+                new Font("Cascadia Code", Font.PLAIN, 20), false));
             
-        drawGrid(0, new Vector2i(board.WIDTH, board.HEIGHT));
+        drawGrid(10, board);
     }
 
     public static void projectToScreen(Vector2i pos, int highlight, Board board) {
-        Vector2i drawPos = pos.sub(screenPos.floor()).mul(cellLen);
         Color color;
 
         if (highlight == 1)
@@ -97,27 +99,41 @@ public class BoardUI {
         else
             color = Color.WHITE;
 
-        board.frameAdd(new FillRect(drawPos, drawWidth, 0, color));
+        board.frameAdd(new FillRect(new RectType(posToDraw(pos), new Vector2i(drawWidth)), 0, color));
     }
 
     // IF INTERVAL SET TO 0, DRAW GRID NORMALLY
-    private static void drawGrid(int interval, Vector2i size) {
-        final Color COLOR = new Color(1f, 1f, 1f, 0.3f);
-        // final Vector2i screenFloor = screenPos.floor();
-        // if (interval == 0) {
-        //     // as cell length increases, number of draw lines increases
-        //     final int drawInterval = Math.max(-cellLen+20, 1);
+    private static void drawGrid(int interval, Board board) {
+        // final Vector2i startPos = screenPos.sub(screenPos.mod((double)interval)).floor();
+        final Vector2i startPos = screenPos.floorToInterval(interval).floor();
+        final Vector2i endPos = screenPos.add(board.getDSize().div(cellLen)).floorToInterval(interval).add(interval).floor();
+        final Color COLOR = new Color(1f, 1f, 1f, 0.2f);
 
-        //     // loops over every x square
-        //     for (int x = screenFloor.x; x < screenFloor.x+size.x/cellLen; x+=drawInterval) {
-        //         int drawX = (x-screenFloor.x)*cellLen;
-        //         shapes.add(new Line(new Vector2i(drawX, 0), new Vector2i(drawX, size.y), COLOR, (x%cellLen*10 == 0)?3:1));
-        //     }
-        //     for (int y = screenFloor.y; y < screenFloor.y+size.y/cellLen; y+=drawInterval) {
-        //         int drawY = (y-screenFloor.y)*cellLen;
-        //         shapes.add(new Line(new Vector2i(0, drawY), new Vector2i(size.x, drawY), COLOR, (y%cellLen*10 == 0)?3:1));
-        //     }
-        // }
+        System.out.println(posToDraw(startPos)+", "+posToDraw(endPos));
+
+        for (int x = startPos.x; x < endPos.x; x++) {
+            int width = 1;
+            if (x % interval == 0)
+                width = 2;
+            board.frameAdd(new Line(
+                new Vector2i(startPos.x+x*cellLen+board.getDSize().x/2, 0),
+                new Vector2i(startPos.x+x*cellLen+board.getDSize().x/2, board.getDSize().y),
+                // posToDraw(new Vector2i(startPos.x+x*cellLen, 0)),
+                // posToDraw(new Vector2i(startPos.x+x*cellLen, board.size.y/cellLen)),
+                COLOR, width
+            ));
+        }
+
+        for (int y = startPos.y; y < endPos.y; y++) {
+            int width = 1;
+            if (y % interval == 0)
+                width = 2;
+            board.frameAdd(new Line(
+                new Vector2i(0,                  startPos.y+y*cellLen+board.getDSize().x/2),
+                new Vector2i(board.getDSize().y, startPos.y+y*cellLen+board.getDSize().x/2),
+                COLOR, width
+            ));
+        }
     }
 
     public static void placeSchemDraw(Schematic draw, Board board) {
@@ -127,7 +143,7 @@ public class BoardUI {
             return;
         }
 
-        final Vector2d max = screenPos.add(board.WIDTH/cellLen);
+        final Vector2d max = screenPos.add(board.getDSize().div(cellLen));
 
         Vector2i offset = board.getMouseGamePos();
         for (Vector2i pos : draw.getData()) {
@@ -139,7 +155,9 @@ public class BoardUI {
         }
 
         // bounding box
-        board.frameAdd(new Rect(draw.getBoundingBox(cellLen, offset.sub(screenPos).ceil()), 2, Color.WHITE));
+        RectType box = draw.getBoundingBox(cellLen, offset.sub(screenPos).ceil());
+        // box.setPos(box.getPos().add(new Vector2i(cellLen, -cellLen)));
+        board.frameAdd(new Rect(box, 2, Color.WHITE));
 
         // bounding box of every schematic
         for (Schematic s : board.allSchematics.keySet()) {
@@ -147,7 +165,7 @@ public class BoardUI {
             if (board.allSchematics.get(s) != board.game.getStepCount())
                 continue;
 
-            RectType dim = s.getBoundingBox(cellLen, screenPos.mul(-1).ceil());
+            RectType dim = s.getBoundingBox(cellLen, screenPos.ceil().add(board.getDSize().div(cellLen).sub(1).floor()));
             // not on screen
             if (dim.getPos().x + dim.getSize().x < 0 || dim.getPos().x > board.WIDTH ||
                 dim.getPos().y + dim.getSize().y < 0 || dim.getPos().y > board.HEIGHT)
@@ -157,7 +175,8 @@ public class BoardUI {
         }
 
         // cancel text
-        board.frameAdd(new Text("Press "+board.input.keyBind.cancelKey()+" to stop placement", ScreenPos.TOP_CENTER, board.WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+        board.frameAdd(new AlignText("Press "+board.input.keyBind.cancelKey()+" to stop placement", Alignment.TOP_CENTER, board.getDimensions(),
+                Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20), false));
 
         int key = board.input.placeSchemCheck();
         // rotate schem
@@ -191,7 +210,7 @@ public class BoardUI {
     }
 
     public static void drawKeybindings(Board board) {
-        board.frameAdd(new FillRect(0, 0, board.WIDTH, board.HEIGHT, 0, new Color(0f, 0f, 0f, 0.5f)));
+        board.frameAdd(new FillRect(board.getDimensions(), 0, new Color(0f, 0f, 0f, 0.5f)));
 
         for (Shape i : board.input.getKeyGuide())
             board.frameAdd(i);
@@ -232,6 +251,10 @@ public class BoardUI {
         menu.add(helpMenu);
         menu.add(schem);
         board.setJMenuBar(menu);
+    }
+
+    public static Vector2i posToDraw(Vector2i pos) {
+        return pos.sub(screenPos.floor()).mul(cellLen);
     }
 
     public static void setCellLen(int cellLen) {

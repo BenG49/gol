@@ -134,11 +134,9 @@ public class Schematic {
      * @return RectType of the bounding box around the schematic
      */
     public RectType getBoundingBox(int cellLen, Vector2i offset) {
-        Vector2i max = Vector2i.overallMax(cells);
-
         return new RectType(
             offset.mul(cellLen),
-            max.sub(origin).abs().mul(cellLen).add((int)(cellLen*0.95))
+            Vector2i.overallMax(cells).sub(origin).abs().mul(cellLen).add((int)(cellLen*0.95))
         );
     }
 

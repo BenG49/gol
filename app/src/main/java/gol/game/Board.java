@@ -9,8 +9,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.awt.*;
 
+import bglib.input.InputDisplay;
 import bglib.display.shapes.*;
-import bglib.display.shapes.Text.ScreenPos;
+import bglib.display.shapes.AlignText.Alignment;
 import bglib.util.*;
 
 import gol.game.schematic.*;
@@ -154,7 +155,7 @@ public class Board extends InputDisplay {
 
             // ADD CELL
             if (selectMode == 0 && !promptingSel) {
-                if (!game.hasCell(mousePos) && !input.getStepAuto())
+                if (!input.getStepAuto())
                     undoCells.get(undoIndex).add(mousePos);
 
                 game.addCell(mousePos);
@@ -200,12 +201,15 @@ public class Board extends InputDisplay {
 
     // something weird with this rounding error
     public Vector2i getMouseGamePos() {
-        return getMousePos(BoardUI.USING_MENU).mul(HEIGHT/(double)input.getCellLen()).add(input.getScreenPos()).floor();
+        Vector2d temp = getMousePos(BoardUI.USING_MENU);
+        temp.setX(temp.x*(WIDTH/input.getCellLen()));
+        temp.setY(temp.y*(HEIGHT/input.getCellLen()));
+        return temp.add(input.getScreenPos()).floor();
     }
 
     private void selectionPrompt() {
-        frameAdd(new Text("Type "+input.keyBind.saveKey()+" to save, "+input.keyBind.cancelKey()+" to exit, "+input.keyBind.delete()+" to delete cells",
-            ScreenPos.TOP_CENTER, WIDTH, Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20)));
+        frameAdd(new AlignText("Type "+input.keyBind.saveKey()+" to save, "+input.keyBind.cancelKey()+" to exit, "+input.keyBind.delete()+" to delete cells",
+            Alignment.TOP_CENTER, new RectType(Vector2d.ORIGIN, getDSize().asVector2d()), Color.WHITE, new Font("Cascadia Code", Font.PLAIN, 20), false));
 
         int choice = input.checkSavePrompt();
 
