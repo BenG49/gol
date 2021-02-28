@@ -187,7 +187,7 @@ public class BoardUI {
             Schematic.mirrorX(board.tempSchem);
 
         // check for cancel key
-        if (board.input.checkSavePrompt() == -1)
+        if (board.hasKey(board.input.keyBind.cancelKey()))
             board.placeSchem = false;
 
         if (board.getButtonPressed(1)) {

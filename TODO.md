@@ -5,4 +5,5 @@
     * Note - may be caused by screenPos rounding errors
 * Fix selection innacuracy farther from origin
 * Fix cursor innacuracy (at bottom of screen)
+* Fix infinite selection bugs
 * Write documentation

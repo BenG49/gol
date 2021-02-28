@@ -64,7 +64,7 @@ public class Board extends InputDisplay {
         this(aliveCells, 24, new KeyBinding());
     }
     public Board(HashSet<Vector2i> aliveCells, int cellScreenLen, KeyBinding binding) {
-        super(DEFAULT_WIDTH, DEFAULT_WIDTH, Color.BLACK);
+        super(DEFAULT_WIDTH, DEFAULT_WIDTH, Color.BLACK, "GOL");
 
         BoardUI.createMenu(this);
 
