@@ -241,6 +241,12 @@ public class BoardInput {
         BoardUI.setScreenPos(screenPos);
     }
 
+    public void setSelMode(int mode) { 
+        final int SEL_MODE_COUNT = 2;
+        if (mode < SEL_MODE_COUNT)
+            this.selectMode = mode;
+    }
+
     // get methods
     public Shape[] getKeyGuide() {
         final int CENTER_RATIO = (int)(b.WIDTH*0.3);

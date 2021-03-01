@@ -127,8 +127,22 @@ public class Schematic {
         return path;
     }
 
+    public boolean isEmpty() {
+        boolean out = cells.size() == 0;
+
+        if (out && schematics.size() > 0) {
+            for (Schematic s : schematics) {
+                if (!s.isEmpty()) {
+                    out = true;
+                    break;
+                }
+            }
+        }
+
+        return out;
+    }
+
     /**
-     * 
      * @param cellLen current cell length, or zoom level
      * @param offset integer position in cells on the screen
      * @return RectType of the bounding box around the schematic
@@ -148,6 +162,11 @@ public class Schematic {
 
     public void setOrigin(Vector2i offset) {
         this.origin = Vector2i.overallMin(cells).add(offset);
+    }
+
+    // TODO: should this recursively remove?
+    public void removeCell(Vector2i cell) {
+        cells.remove(cell);
     }
 
     public static List<Vector2i> rotate90(List<Vector2i> in) {

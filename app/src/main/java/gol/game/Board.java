@@ -151,8 +151,9 @@ public class Board extends InputDisplay {
                     promptingSel = false;
                 else if (selectMode == 0 && !input.getStepAuto())
                     undoCells.add(new HashSet<Vector2i>());
-                else if (selectMode == 1)
+                else if (selectMode == 1) {
                     selectA = mousePos;
+                }
 
                 lastLeftMouse = true;
             }
@@ -192,7 +193,7 @@ public class Board extends InputDisplay {
 
             // REMOVE CELL
             else if (selectMode == 0 && game.hasCell(mousePos))
-                game.removeCell(mousePos);
+                removeCell(mousePos);
         } else {
             if (lastRightMouse) {
                 if (promptingSel)
@@ -250,7 +251,7 @@ public class Board extends InputDisplay {
                 }
 
                 for (Vector2i pos : toRemove)
-                    game.removeCell(pos);
+                    removeCell(pos);
 
                 for (Vector2i pos : toReplace)
                     game.addCell(pos);
@@ -277,7 +278,7 @@ public class Board extends InputDisplay {
                 }
 
                 for (Vector2i pos : toRemove)
-                    game.removeCell(pos);
+                    removeCell(pos);
             }
 
             promptingSel = false;
@@ -287,7 +288,7 @@ public class Board extends InputDisplay {
     public void undo() {
         if (undoIndex > 0) {
             for (Vector2i pos : undoCells.get(undoIndex-1))
-                game.removeCell(pos);
+                removeCell(pos);
         
             undoCells.remove(undoIndex-1);
             undoIndex--;
@@ -303,5 +304,19 @@ public class Board extends InputDisplay {
         allSchematics.clear();
         ctrlZClear();
         game.clearCells();
+    }
+
+    public void removeCell(Vector2i pos) {
+        game.removeCell(pos);
+
+        // TODO: check how bad this is affecting performance
+        HashSet<Schematic> keys = new HashSet<Schematic>(allSchematics.keySet());
+        for (Schematic s : keys) {
+            if (allSchematics.get(s) == game.getStepCount()) {
+                s.removeCell(s.getOrigin().sub(pos));
+                if (s.isEmpty())
+                    allSchematics.remove(s);
+            }
+        }
     }
 }

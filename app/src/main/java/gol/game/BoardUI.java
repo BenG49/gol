@@ -64,11 +64,11 @@ public class BoardUI {
             Vector2i size = pos.sub(board.getMouseGamePos()).mul(-cellLen);
 
             if (size.x < 0) {
-                pos.setX(pos.x+size.x/cellLen);
+                pos.setX(pos.x+size.x/cellLen+1);
                 size.setX(-size.x);
             }
             if (size.y < 0) {
-                pos.setY(pos.y+size.y/cellLen);
+                pos.setY(pos.y+size.y/cellLen+1);
                 size.setY(-size.y);
             }
 
@@ -238,6 +238,7 @@ public class BoardUI {
                 public void actionPerformed(ActionEvent e) {
                     board.tempSchem = JSON.loadSchem();
                     board.placeSchem = true;
+                    board.input.setSelMode(0);
                 }
             });
 
