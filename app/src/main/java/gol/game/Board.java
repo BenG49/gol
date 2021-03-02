@@ -89,7 +89,7 @@ public class Board extends InputDisplay {
     public void run() {
         while (input.getRun()) {
             if (input.getRunOptimized()) {
-                input.checkKeysOptimized();
+                checkKeys();
                 if (input.getStepAuto())
                     game.step();
 
@@ -103,7 +103,7 @@ public class Board extends InputDisplay {
                     BoardUI.drawKeybindings(this);
                 else if (placeSchem) {
                     BoardUI.placeSchemDraw(tempSchem, this);
-                    input.checkKeysOptimized();
+                    checkKeys();
                 } else {
                     if (input.getStepAuto() && !betweenSteps) {
                         game.step();
@@ -120,11 +120,8 @@ public class Board extends InputDisplay {
                             stepTimer.schedule(stepTimerTask, input.getStepTimeMillis());
                         }
                     }
-                    // laptop specs:
-                    // 8411 steps non optimized 30 secs full speed
-                    // 436730 steps optimized 30 secs
 
-                    input.checkKeys();
+                    checkKeys();
                     checkMouseClicks();
                 }
 
@@ -206,9 +203,8 @@ public class Board extends InputDisplay {
 
     // something weird with this rounding error
     public Vector2i getMouseGamePos() {
-        Vector2d temp = getMousePos(BoardUI.USING_MENU);
-        temp.setX(temp.x*(WIDTH/input.getCellLen()));
-        temp.setY(temp.y*(HEIGHT/input.getCellLen()));
+        Vector2d temp = getMousePosMenu();
+        temp = temp.mul(new Vector2d(WIDTH/(double)input.getCellLen(), HEIGHT/(double)input.getCellLen()));
         return temp.add(input.getScreenPos()).floor();
     }
 

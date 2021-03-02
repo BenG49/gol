@@ -9,6 +9,7 @@ import java.util.HashSet;
 import bglib.display.shapes.Shape;
 import bglib.display.shapes.AlignText;
 import bglib.display.shapes.AlignText.Alignment;
+import bglib.input.*;
 
 import gol.game.Board;
 import gol.game.BoardUI;
@@ -18,8 +19,6 @@ import bglib.util.Vector2d;
 
 public class BoardInput {
     private Board b;
-    private HashSet<String> lastKeyPressed;
-    private HashMap<String, Integer> keyRepeat;
 
     public KeyBinding keyBind;
 
@@ -31,20 +30,10 @@ public class BoardInput {
     private final int MAX_STEP_TIME = 300;
     // interval to increase stepTime by
     private final int STEP_TIME_INTERVAL = (int)(MAX_STEP_TIME/10);
-    // LUT for if key can be repeated
-    private final HashSet<String> KEYS_DONT_REPEAT;
-    // LUT for if key always repeats
-    private final HashSet<String> KEYS_ALWAYS_REPEAT;
     // zoom min
     public final int CELL_LEN_MIN = 2;
     // zoom max
     public final int CELL_LEN_MAX = 500;
-    
-    // <--THESE VALUES ARE COMPLETELY DEPENDENT ON PROGRAM SPEED-->
-    // amount of time to wait until spamming
-    private final int KEY_REPEAT_CUTOFF = 400;
-    // interval to wait between keys to activate when spamming
-    private final int KEY_REPEAT_MODULO = 80;
 
     private int stepTimeMillis;
     private boolean stepAuto;
@@ -54,7 +43,7 @@ public class BoardInput {
     private int selectMode;
     private boolean runOptimized;
 
-    private double movementSpeed = 50;
+    private final int KEY_REPEAT_SLOW_MOD = 300;
 
     public BoardInput(Board b, KeyBinding binding, int cellScreenLen) {
         this(b, binding, new Vector2d(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2), cellScreenLen);
@@ -71,91 +60,95 @@ public class BoardInput {
         selectMode = 0;
         runOptimized = false;
 
+        b.setTrackerEvents(keyEvents());
+
         BoardUI.setCellLen(cellScreenLen);
         BoardUI.setScreenPos(screenPos);
-
-        lastKeyPressed = new HashSet<String>();
-        keyRepeat = new HashMap<String, Integer>();
-        KEYS_DONT_REPEAT = new HashSet<String>(Arrays.asList(new String[] {
-            keyBind.toggleAutoKey(),
-            keyBind.mode1(),
-            keyBind.mode2(),
-            keyBind.toggleOptimized(),
-            keyBind.reset(),
-            keyBind.mirror()
-        }));
-        KEYS_ALWAYS_REPEAT = new HashSet<String>(Arrays.asList(new String[] {
-            keyBind.up(),
-            keyBind.down(),
-            keyBind.left(),
-            keyBind.right()
-        }));
     }
 
-    public void checkKeysOptimized() {
+    private HashMap<String, InputEvent> keyEvents() {
+        HashMap<String, InputEvent> output = new HashMap<String, InputEvent>();
 
-        // KEYS
-        if (keyCanBePressed(keyBind.toggleAutoKey()))
-            stepAuto = !stepAuto;
+        output.put(keyBind.toggleAutoKey(), new InputEvent() {
+            @Override public void run() { stepAuto = !stepAuto; }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.PRESS); }});
+            
+        output.put(keyBind.singleStepKey(), new InputEvent() {
+            @Override public void run() { if (!stepAuto) {
+                    b.game.step(); b.ctrlZClear(); }}
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.PRESS); }});
+
+        output.put(keyBind.zoomOut(), new InputEvent() {
+            @Override public void run() { zoom(false); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.REPEAT, KEY_REPEAT_SLOW_MOD); }});
+
+        output.put(keyBind.zoomIn(), new InputEvent() {
+            @Override public void run() { zoom(true); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.REPEAT, KEY_REPEAT_SLOW_MOD); }});
         
-        if (!stepAuto && keyCanBePressed(keyBind.singleStepKey())) {
-            b.game.step();
-            b.ctrlZClear();
-        }
+        output.put(keyBind.up(), new InputEvent() {
+            @Override public void run() { move("up"); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.REPEAT); }});
+        
+        output.put(keyBind.down(), new InputEvent() {
+            @Override public void run() { move("down"); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.REPEAT); }});
+        
+        output.put(keyBind.left(), new InputEvent() {
+            @Override public void run() { move("left"); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.REPEAT); }});
+        
+        output.put(keyBind.right(), new InputEvent() {
+            @Override public void run() { move("right"); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.REPEAT); }});
+            
+        output.put(keyBind.toOrigin(), new InputEvent() {
+            @Override public void run() {
+                screenPos = new Vector2d(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.REPEAT); }});
+            
+        output.put(keyBind.speedUp(), new InputEvent() {
+            @Override public void run() { if (stepTimeMillis > 2)
+                stepTimeMillis = Math.max(stepTimeMillis - STEP_TIME_INTERVAL, 2); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.REPEAT, KEY_REPEAT_SLOW_MOD); }});
+            
+        output.put(keyBind.speedDown(), new InputEvent() {
+            @Override public void run() { if (stepTimeMillis < STEP_TIME_INTERVAL)
+                stepTimeMillis += STEP_TIME_INTERVAL; }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.REPEAT, KEY_REPEAT_SLOW_MOD); }});
 
-        if (keyCanBePressed(keyBind.zoomOut()))
-            zoom(false);
+        output.put(keyBind.clear(), new InputEvent() {
+            @Override public void run() { b.clear(); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.PRESS); }});
 
-        if (keyCanBePressed(keyBind.zoomIn()))
-            zoom(true);
+        output.put(keyBind.mode1(), new InputEvent() {
+            @Override public void run() { selectMode = 0; }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.PRESS); }});
 
-        if (keyCanBePressed(keyBind.up()))
-            move("up");
+        output.put(keyBind.mode2(), new InputEvent() {
+            @Override public void run() { selectMode = 1; }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.PRESS); }});
 
-        if (keyCanBePressed(keyBind.down()))
-            move("down");
-
-        if (keyCanBePressed(keyBind.left()))
-            move("left");
-
-        if (keyCanBePressed(keyBind.right()))
-            move("right");
-
-        if (keyCanBePressed(keyBind.toOrigin()))
-            screenPos = new Vector2d(-b.WIDTH/cellScreenLen/2, -b.HEIGHT/cellScreenLen/2);
-
-        if (keyCanBePressed(keyBind.toggleOptimized()))
-            runOptimized = !runOptimized;
-
-        if (keyCanBePressed(keyBind.undo()))
-            b.undo();
-
-    }
-
-    public void checkKeys() {
-
-        movementSpeed = (b.WIDTH/cellScreenLen)*MOVEMENT_MULT;
-
-        // KEYS
-        checkKeysOptimized();
-
-        if (keyCanBePressed(keyBind.speedUp()) && stepTimeMillis > 2)
-            stepTimeMillis = Math.max(stepTimeMillis - STEP_TIME_INTERVAL, 2);
-
-        if (keyCanBePressed(keyBind.speedDown()) && stepTimeMillis < MAX_STEP_TIME)
-            stepTimeMillis += STEP_TIME_INTERVAL;
-
-        if (keyCanBePressed(keyBind.clear()))
-            b.clear();
-
-        if (keyCanBePressed(keyBind.mode1()))
-            selectMode = 0;
-
-        if (keyCanBePressed(keyBind.mode2()))
-            selectMode = 1;
-
-        if (keyCanBePressed(keyBind.reset()))
-            b.game.resetSteps();
+        output.put(keyBind.reset(), new InputEvent() {
+            @Override public void run() { b.game.resetSteps(); }
+            @Override public EventType getEventType() {
+                return new EventType(EventTime.PRESS); }});
+        
+        return output;
     }
 
     public int checkSavePrompt() {
@@ -173,52 +166,28 @@ public class BoardInput {
     }
 
     public int placeSchemCheck() {
-        if (keyCanBePressed(keyBind.rotate()))
+        if (b.hasKey(keyBind.rotate()))
             return 1;
-        if (keyCanBePressed(keyBind.mirror())) {
+        if (b.hasKey(keyBind.mirror()))
             return 2;
-        } else
+        else
             return 0;
     }
 
-    private boolean keyCanBePressed(String key) {
-        // key held down
-        if (b.hasKey(key) && !KEYS_DONT_REPEAT.contains(key)) {
-            if (!keyRepeat.containsKey(key))
-                keyRepeat.put(key, 0);
-            
-            Integer temp = keyRepeat.get(key);
-            keyRepeat.replace(key, ++temp);
-            
-            if ((KEYS_ALWAYS_REPEAT.contains(key) || temp >= KEY_REPEAT_CUTOFF) && temp % KEY_REPEAT_MODULO == 0)
-                return true;
-        }
-
-        // key initial press
-        if (!lastKeyPressed.contains(key) && b.hasKey(key)) {
-            lastKeyPressed.add(key);
-            return true;
-        }
-
-        // key release
-        if (lastKeyPressed.contains(key) && !b.hasKey(key)) {
-            lastKeyPressed.remove(key);
-            keyRepeat.remove(key);
-        }
-
-        return false;
-    }
-
     private void move(String dir) {
+        double xDelta = 0, yDelta = 0;
+        double movementSpeed = (b.WIDTH/cellScreenLen)*MOVEMENT_MULT;
+
         if (dir == "up")
-            screenPos = screenPos.add(new Vector2d(0, -movementSpeed));
+            yDelta = -movementSpeed;
         else if (dir == "down")
-            screenPos = screenPos.add(new Vector2d(0, movementSpeed));
+            yDelta = movementSpeed;
         else if (dir == "left")
-            screenPos = screenPos.add(new Vector2d(-movementSpeed, 0));
+            xDelta = -movementSpeed;
         else if (dir == "right")
-            screenPos = screenPos.add(new Vector2d(movementSpeed, 0));
+            xDelta = movementSpeed;
         
+        screenPos = screenPos.add(new Vector2d(xDelta, yDelta));
         BoardUI.setScreenPos(screenPos);
     }
 

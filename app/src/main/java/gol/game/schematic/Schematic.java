@@ -200,7 +200,7 @@ public class Schematic {
         HashSet<Vector2i> output = new HashSet<Vector2i>();
 
         for (Vector2i pos : in.getData()) {
-            pos.setX(-(pos.x-originToCenter)*2+pos.x);
+            pos = pos.setX(-(pos.x-originToCenter)*2+pos.x);
             output.add(pos);
         }
 

@@ -24,7 +24,6 @@ public class BoardUI {
     private static Vector2d screenPos;
 
     private static final double drawWidth = 0.95;
-    public static final boolean USING_MENU = true;
 
     public static void drawOptimized(Board board) {
         final Vector2d max = board.input.getScreenPos().add(board.getDSize().div(cellLen));
@@ -50,7 +49,7 @@ public class BoardUI {
     public static void drawBoard(Board board) {
         drawOptimized(board);
 
-        final Vector2d mousePos = board.getMousePos(USING_MENU);
+        final Vector2d mousePos = board.getMousePosMenu();
 
         // cross around 0,0
         for (int y = -2; y < 3; y++)
@@ -64,19 +63,20 @@ public class BoardUI {
             Vector2i size = pos.sub(board.getMouseGamePos()).mul(-cellLen);
 
             if (size.x < 0) {
-                pos.setX(pos.x+size.x/cellLen+1);
-                size.setX(-size.x);
+                pos = pos.setX(pos.x+size.x/cellLen+1);
+                size = size.setX(-size.x);
             }
             if (size.y < 0) {
-                pos.setY(pos.y+size.y/cellLen+1);
-                size.setY(-size.y);
+                pos = pos.setY(pos.y+size.y/cellLen+1);
+                size = size.setY(-size.y);
             }
 
             board.frameAdd(new FillRect(new RectType(pos, size), 0, new Color(1f, 1f, 1f, 0.5f)));
         }
         // mouse highlight
-        else if (mousePos.x > 0 && mousePos.x < 1 && mousePos.y > 0 && mousePos.y < 1)
+        else if (mousePos.x > 0 && mousePos.x < 1 && mousePos.y > 0 && mousePos.y < 1) {
             projectToScreen(board.getMouseGamePos(), 2, board);
+        }
 
         // bottom left
         board.frameAdd(new AlignText(new String[] {
